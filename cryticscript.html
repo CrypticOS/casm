@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title>CrypticOS Development Kit</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<textarea id="code">var a '['
+var b ']'
+:top
+print a
+print b
+goto top</textarea>
+		<textarea id="output"></textarea>
+		<button onclick="run()">Run</button>
+	</body>
+	<script type="text/javascript" src="emulator.js"></script>
+	<script type="text/javascript" src="lex.js"></script>
+	<script type="text/javascript" src="compile.js"></script>
+	<script>
+	var output = [];
+
+	var code = document.getElementById("code");
+	var output = document.getElementById("output");
+
+	function run() {
+		var mem = {
+			top: [0, 0, 0, 0, 0, 0],
+			topP: 0,
+			bottom: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			bottomP: 0
+		};
+
+		var brainflake = compile(code.value.split("\n"));
+		console.log(brainflake);
+		output.value = "";
+		output.value += brainflake;
+		output.value += "\n-> Interpreter Result:\n";
+		execute(mem, brainflake);
+	}
+	</script>
+</html>

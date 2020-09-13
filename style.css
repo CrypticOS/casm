@@ -1,0 +1,27 @@
+html, body {
+	margin: 0px;
+	height: 100%;
+	width: 100%;
+}
+
+#code, #output {
+	width: 50%;
+	display: block;
+	background: grey;
+	height: 600px;
+	outline: none;
+	box-sizing: border-box;
+	resize: none;
+}
+
+#code {
+	float: left;
+}
+
+#output {
+	float: right;
+}
+
+body {
+	background: black;
+}
