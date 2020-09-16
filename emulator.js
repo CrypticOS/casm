@@ -63,7 +63,7 @@ function execute(stack, code) {
 
 			break;
 		case '?':
-			if (stack.bottom[stack.bottomP] == stack.top[stack.topP]) {
+			if (stack.top[stack.topP + 1] == stack.top[stack.topP + 2]) {
 				c = labels[stack.top[stack.topP] - 1];
 			}
 
@@ -74,5 +74,5 @@ function execute(stack, code) {
 		}
 
 		c++;
-	}, 5);
+	}, 0);
 }

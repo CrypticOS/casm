@@ -1,3 +1,4 @@
+<!-- inline "%***|>!%********^d!++^<+.?a>!+^<$|" -->
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 	<head>
@@ -6,12 +7,16 @@
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
-		<textarea id="code">var a '['
-var b ']'
+		<!-- Popular snippit from StackOverflow. Not sure of the original creator. -->
+		<textarea id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
+var a 'A'
 :top
-print a
-print b
-goto top</textarea>
+	print a
+	add a 1
+	cmp a 'Z' stop
+	goto top
+:stop
+</textarea>
 		<textarea id="output"></textarea>
 		<button onclick="run()">Run</button>
 	</body>
@@ -19,8 +24,6 @@ goto top</textarea>
 	<script type="text/javascript" src="lex.js"></script>
 	<script type="text/javascript" src="compile.js"></script>
 	<script>
-	var output = [];
-
 	var code = document.getElementById("code");
 	var output = document.getElementById("output");
 

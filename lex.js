@@ -2,22 +2,32 @@ function lex(string) {
 	var tokens = [];
 
 	for (var c = 0; c < string.length; c++) {
-		// Skip certain tokens
-		if (" \n".includes(string[c])) {
+		// Skip nothing
+		if (" \n	".includes(string[c])) {
 			continue;
 		}
 
 		tokens.push({value: "", type: ""});
 		var current = tokens[tokens.length - 1];
 
-		if (isAlpha(string[c])) {
+		if ("=><".includes(string[c])) {
+			current.type = string[c];
+			continue;
+		} else if (isAlpha(string[c])) {
 			current.type = "text";
 			while (isAlpha(string[c])) {
 				current.value += string[c];
 				c++;
 			}
 
-			c--;
+			if (string[c] == "[") {
+				current.selector = "";
+				c++;
+				while (string[c] != "]") {
+					current.selector += string[c];
+					c++;
+				}
+			}
 		} else if (isNum(string[c])) {
 			current.type = "int";
 			while (isNum(string[c])) {

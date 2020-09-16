@@ -6,6 +6,12 @@ function compile(array) {
 
 	for (var l = 0; l < array.length; l++) {
 		var tokens = lex(array[l]);
+
+		// Skip blank lines
+		if (tokens.length == 0) {
+			continue;
+		}
+
 		if (tokens[0].type == "label") {
 			labels[tokens[0].value] = Object.keys(labels).length;
 		}
@@ -16,6 +22,12 @@ function compile(array) {
 
 	for (var l = 0; l < array.length; l++) {
 		var tokens = lex(array[l]);
+
+		// Skip blank lines
+		if (tokens.length == 0) {
+			continue;
+		}
+
 		switch(tokens[0].value) {
 		case "var":
 			var code = putChar(parseTokenData(tokens[2]));
@@ -50,21 +62,49 @@ function compile(array) {
 					lastChar = tokens[1].value[i];
 				}
 			} else {
-				runAt(variables[tokens[1].value].position, ".");
+				runAt(rawPosition(tokens[1]), ".");
 			}
 
 			break;
 		case "add":
-			runAt(variables[tokens[1].value].position, "+".repeat(tokens[2].value));
+			runAt(
+				rawPosition(tokens[1]),
+				putChar(parseTokenData(tokens[2]))
+			);
 			break;
 		case "inline":
 			output += tokens[1].value;
 			break;
 		case "goto":
 			output += "d^a"; // Store current cell up
+			output += "!"; // Reset cell for next adding
 			output += putChar(labels[tokens[1].value] + 1);
 			output += "^dva"; // move up, then restore original value
 			output += "$";
+			break;
+		case "cmp":
+			// Store temp in register 4. Don't go all back since
+			// We will use the previous 3 registers
+			output += "ddd^a";
+
+			// Copy variable
+			output += "!";
+			runAt(rawPosition(tokens[1]), "^");
+
+			// Copy char
+			output += "a!";
+			output += putChar(parseTokenData(tokens[2]));
+			output += "^";
+
+			// Copy in label
+			output += "a!"
+			output += putChar(labels[tokens[3].value] + 1); // put label
+			output += "^!";
+
+			// Restore value from register 4
+			output += "dddvaaa";
+			output += "?";
+			break;
 		}
 
 		if (tokens[0].type == "label") {
@@ -84,6 +124,17 @@ function compile(array) {
 
 			memoryPlace = movementBack[1];
 		}
+
+		function rawPosition(token) {
+			var position = 0;
+			if (token.selector) {
+				position += variables[eval(tokens.value)];
+				position += eval(token.selector);
+			}
+
+			return position;
+		}
+
 	}
 
 	return output;
