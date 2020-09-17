@@ -14,6 +14,8 @@ function compile(array) {
 
 		if (tokens[0].type == "label") {
 			labels[tokens[0].value] = Object.keys(labels).length;
+		} else if (tokens[0].type == "text" && tokens[0].value == "call") {
+			labels[l] = Object.keys(labels).length + labels.length;
 		}
 	}
 
@@ -28,12 +30,21 @@ function compile(array) {
 			continue;
 		}
 
+		if (tokens[0].type == "label") {
+			output += "|";
+			continue;
+		}
+
 		switch(tokens[0].value) {
 		case "var":
-			var code = putChar(parseTokenData(tokens[2]));
+			if (tokens[2].type == "text") {
+				runAt(rawPosition(tokens[2]), "^");
+				output += "v";
+			} else {
+				output += "!";
+				output += putChar(parseTokenData(tokens[2]));
+			}
 
-			output += "!"; // Reset cell just in case
-			output += code; // Insert the integer
 			output += ">"; // navigate to next cell
 
 			var length = 1; // temp
@@ -61,8 +72,10 @@ function compile(array) {
 					output += ".";
 					lastChar = tokens[1].value[i];
 				}
-			} else {
+			} else if (tokens[1].type == "text") {
 				runAt(rawPosition(tokens[1]), ".");
+			} else {
+				output += "!" + putChar(parseTokenData(tokens[1]));
 			}
 
 			break;
@@ -71,21 +84,47 @@ function compile(array) {
 				rawPosition(tokens[1]),
 				putChar(parseTokenData(tokens[2]))
 			);
+
+			break;
+		case "set":
+			if (tokens[2].type == "text") {
+				if (tokens[2].value == "getchar") {
+					runAt(rawPosition(tokens[1]), ",");
+					continue;
+				}
+
+				runAt(rawPosition(tokens[1]), "^");
+				runAt(rawPosition(tokens[2]), "v");
+			} else {
+				runAt(
+					rawPosition(tokens[1]),
+					"!" + putChar(parseTokenData(tokens[2]))
+				);
+			}
+
+			break;
+		case "sub":
+			runAt(
+				rawPosition(tokens[1]),
+				"-".repeat(parseTokenData(tokens[2]))
+			);
+
 			break;
 		case "inline":
 			output += tokens[1].value;
 			break;
 		case "goto":
-			output += "d^a"; // Store current cell up
+			//output += "d^a"; // Store current cell up // old
 			output += "!"; // Reset cell for next adding
 			output += putChar(labels[tokens[1].value] + 1);
-			output += "^dva"; // move up, then restore original value
-			output += "$";
+			//output += "^dva"; // move up, then restore original value // old
+			output += "^$";
 			break;
 		case "cmp":
 			// Store temp in register 4. Don't go all back since
 			// We will use the previous 3 registers
-			output += "ddd^a";
+			// output += "ddd^a"; // old
+			output += "ddda";
 
 			// Copy variable
 			output += "!";
@@ -102,13 +141,9 @@ function compile(array) {
 			output += "^!";
 
 			// Restore value from register 4
-			output += "dddvaaa";
+			//output += "dddvaaa"; // old
 			output += "?";
 			break;
-		}
-
-		if (tokens[0].type == "label") {
-			output += "|";
 		}
 
 		// Run code at after moving to a certain spot, then return.
@@ -127,14 +162,19 @@ function compile(array) {
 
 		function rawPosition(token) {
 			var position = 0;
+			position += variables[token.value].position;
 			if (token.selector) {
-				position += variables[eval(tokens.value)];
 				position += eval(token.selector);
 			}
 
 			return position;
 		}
 
+	}
+
+	// Minimize output
+	while (output.includes("><")) {
+		output = output.replace("><", "");
 	}
 
 	return output;

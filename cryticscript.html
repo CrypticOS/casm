@@ -1,4 +1,35 @@
-<!-- inline "%***|>!%********^d!++^<+.?a>!+^<$|" -->
+<!--
+I'm putting code snippits here. Have a problem with that? Too bad.
+
+== Add two integers ==
+
+var add_first 2 ; initial integer
+var add_second 2 ; second integer (will be zero)
+:add_top
+	cmp add_second 0 add_stop ; is d zero? then stop
+	add add_first 1 ; increase first and
+	sub add_second 1 ; decrease second
+	goto add_top
+:add_stop
+add add_first '0' ; add '0' so it can be char
+print add_first
+
+== Prompt ==
+
+var input 0
+:top
+	set input getchar
+	cmp input '?' help
+	print " :("
+	inline "!**.+++."
+goto top
+
+:help
+	print " :-)"
+	inline "!**.+++."
+goto top
+
+-->
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 	<head>
@@ -9,16 +40,22 @@
 	<body>
 		<!-- Popular snippit from StackOverflow. Not sure of the original creator. -->
 		<textarea id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
-var a 'A'
-:top
-	print a
-	add a 1
-	cmp a 'Z' stop
-	goto top
-:stop
+var add_first 2
+var add_second 2
+
+:add_top
+	cmp add_second 0 add_stop
+	add add_first 1
+	sub add_second 1
+	goto add_top
+:add_stop
+
+add add_first '0'
+print add_first
 </textarea>
 		<textarea id="output"></textarea>
-		<button onclick="run()">Run</button>
+		<button onclick="compileAsm()">Compile</button>
+		<button onclick="compileRun()">Run & Compile</button>
 	</body>
 	<script type="text/javascript" src="emulator.js"></script>
 	<script type="text/javascript" src="lex.js"></script>
@@ -27,7 +64,19 @@ var a 'A'
 	var code = document.getElementById("code");
 	var output = document.getElementById("output");
 
-	function run() {
+	function compileAsm() {
+		var asm = compile(code.value.split("\n"));
+		console.log(asm);
+		output.value = "";
+		output.value += asm;
+		return asm;
+	}
+
+	function compileRun() {
+		runCode(compileAsm());
+	}
+
+	function runCode(brainflake) {
 		var mem = {
 			top: [0, 0, 0, 0, 0, 0],
 			topP: 0,
@@ -35,10 +84,6 @@ var a 'A'
 			bottomP: 0
 		};
 
-		var brainflake = compile(code.value.split("\n"));
-		console.log(brainflake);
-		output.value = "";
-		output.value += brainflake;
 		output.value += "\n-> Interpreter Result:\n";
 		execute(mem, brainflake);
 	}

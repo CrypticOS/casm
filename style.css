@@ -16,6 +16,7 @@ html, body {
 
 #code {
 	float: left;
+	tab-size: 4;
 }
 
 #output {

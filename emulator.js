@@ -62,6 +62,10 @@ function execute(stack, code) {
 			);
 
 			break;
+		case ',':
+			stack.bottom[stack.bottomP] = prompt("Enter char").charCodeAt(0);
+
+			break;
 		case '?':
 			if (stack.top[stack.topP + 1] == stack.top[stack.topP + 2]) {
 				c = labels[stack.top[stack.topP] - 1];

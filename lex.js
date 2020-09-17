@@ -20,6 +20,7 @@ function lex(string) {
 				c++;
 			}
 
+			// Test for selector "asd[1]"
 			if (string[c] == "[") {
 				current.selector = "";
 				c++;
@@ -27,6 +28,15 @@ function lex(string) {
 					current.selector += string[c];
 					c++;
 				}
+			}
+		} else if (string[c] == ";") {
+			while (c < string.length) {
+				c++;
+			}
+
+			// If we have not done any other tokens
+			if (tokens.length == 1) {
+				return [];
 			}
 		} else if (isNum(string[c])) {
 			current.type = "int";
