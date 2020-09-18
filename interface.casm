@@ -1,0 +1,19 @@
+; This is the CrypticASM (CASM) assembly file for a
+; CrypticOS prompt. Please enjoy the stupid code.
+
+var input 0
+var new 10
+top:
+	mov input getchar
+	inl "!**.+++."
+
+	cmp input '?' help
+	out ":("
+
+	inl "!**.+++."
+jmp top
+
+help:
+	out ":)"
+	inl "!**.+++."
+jmp top 

@@ -15,10 +15,10 @@ function compile(array) {
 		if (tokens[0].type == "label") {
 			labels[tokens[0].value] = Object.keys(labels).length;
 		} else if (tokens[0].type == "text" && tokens[0].value == "call") {
-			labels[l] = Object.keys(labels).length + labels.length;
+			labels[l] = Object.keys(labels).length;
 		}
 	}
-
+	
 	var memoryUsed = 0;
 	var memoryPlace = 0;
 
@@ -47,7 +47,7 @@ function compile(array) {
 
 			output += ">"; // navigate to next cell
 
-			var length = 1; // temp
+			var length = 1; // Single char
 
 			variables[tokens[1].value] = {
 				length: length,
@@ -57,7 +57,20 @@ function compile(array) {
 			memoryUsed += length;
 			memoryPlace += length;
 			break;
-		case "print":
+		case "arr":
+			var length = eval(tokens[2].value); // Find array length
+
+			output += ">".repeat(length);
+
+			variables[tokens[1].value] = {
+				length: length,
+				position: memoryUsed
+			}
+
+			memoryUsed += length;
+			memoryPlace += length;
+			break;
+		case "out":
 			if (tokens[1].type == "string") {
 				// A little bit of optmization.
 				// characters won't be added in twice.
@@ -86,15 +99,30 @@ function compile(array) {
 			);
 
 			break;
-		case "set":
+		case "call":
+			output += "!"; // Reset for writing
+			output += putChar(labels[l] + 1); // copy return location
+			output += "^d"; // Up, right (for when return is called), and goto
+
+			output += "!"; // Reset for writing
+			output += putChar(labels[tokens[1].value] + 1); // copy return location
+			output += "^$"; // Up, right (for when return is called), and goto
+
+			output += "|"; // Put label
+
+			break;
+		case "ret":
+			output += "a$"; // Goto previous reg.
+			break;
+		case "mov":
 			if (tokens[2].type == "text") {
 				if (tokens[2].value == "getchar") {
 					runAt(rawPosition(tokens[1]), ",");
 					continue;
 				}
 
-				runAt(rawPosition(tokens[1]), "^");
-				runAt(rawPosition(tokens[2]), "v");
+				runAt(rawPosition(tokens[2]), "^");
+				runAt(rawPosition(tokens[1]), "v");
 			} else {
 				runAt(
 					rawPosition(tokens[1]),
@@ -105,18 +133,18 @@ function compile(array) {
 			break;
 		case "sub":
 			runAt(
-				rawPosition(tokens[1]),
+				rawPosition(checkVariable(tokens[1])),
 				"-".repeat(parseTokenData(tokens[2]))
 			);
 
 			break;
-		case "inline":
+		case "inl":
 			output += tokens[1].value;
 			break;
-		case "goto":
+		case "jmp":
 			//output += "d^a"; // Store current cell up // old
 			output += "!"; // Reset cell for next adding
-			output += putChar(labels[tokens[1].value] + 1);
+			output += putChar(labels[checkLabel(tokens[1]).value] + 1);
 			//output += "^dva"; // move up, then restore original value // old
 			output += "^$";
 			break;
@@ -162,12 +190,32 @@ function compile(array) {
 
 		function rawPosition(token) {
 			var position = 0;
+			if (!variables[token.value]) {
+				console.error(l + ": Unknown variable name " + token);
+			}
+
 			position += variables[token.value].position;
 			if (token.selector) {
 				position += eval(token.selector);
 			}
 
 			return position;
+		}
+
+		function checkVariable(token) {
+			if (!variables.hasOwnProperty(token.value)) {
+				throw new Error(l + ": Unknown variable name " + token.value);
+			}
+
+			return token;
+		}
+
+		function checkLabel(token) {
+			if (!labels.hasOwnProperty(token.value)) {
+				throw new Error(l + ": Unknown label name " + token.value);
+			}
+
+			return token;
 		}
 
 	}

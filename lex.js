@@ -10,14 +10,17 @@ function lex(string) {
 		tokens.push({value: "", type: ""});
 		var current = tokens[tokens.length - 1];
 
-		if ("=><".includes(string[c])) {
-			current.type = string[c];
-			continue;
-		} else if (isAlpha(string[c])) {
+		if (isAlpha(string[c])) {
 			current.type = "text";
 			while (isAlpha(string[c])) {
 				current.value += string[c];
 				c++;
+			}
+
+			// Quit on detection of label
+			if (string[c] == ":") {
+				current.type = "label";
+				return tokens;
 			}
 
 			// Test for selector "asd[1]"
@@ -59,15 +62,6 @@ function lex(string) {
 				current.value += string[c];
 				c++;
 			}
-		} else if (string[c] == ":" && tokens.length == 1) {
-			current.type = "label";
-			c++;
-			while (isAlpha(string[c])) {
-				current.value += string[c];
-				c++;
-			}
-
-			c--;
 		}
 	}
 

@@ -1,6 +1,6 @@
 // Execute CrytpicASM
 var loop;
-function execute(stack, code) {
+function execute(stack, code, speed) {
 	var labels = [];
 
 	for (var c = 0; c < code.length; c++) {
@@ -11,14 +11,29 @@ function execute(stack, code) {
 
 	clearInterval(loop);
 
-	var c = 0;
-	loop = setInterval(function() {
-		if (c > code.length) {
-			output.value += "\nDone.";
-			clearInterval(loop);
-			return;
+	if (speed == "fast") {
+		var i = 0;
+		for (var c = 0; c < code.length; c++) {
+			i++;
+			if (i > 10000) {alert("Passed 10k, stopped for safety");}
+			execChar();
 		}
+	} else if (speed == "slow") {
+		var c = 0;
+		loop = setInterval(function() {
+			if (c > code.length) {
+				output.value += "\nDone.";
+				clearInterval(loop);
+				return;
+			}
 
+			execChar();
+
+			c++;
+		}, 0);
+	}
+
+	function execChar() {
 		switch (code[c]) {
 		case '+':
 			stack.bottom[stack.bottomP]++;
@@ -76,7 +91,5 @@ function execute(stack, code) {
 			c = labels[stack.top[stack.topP] - 1];
 			break;
 		}
-
-		c++;
-	}, 0);
+	}
 }

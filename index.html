@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title>CrypticOS Playground</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<select id="programSelector">
+			<option>std.casm</option>
+		</select>
+		<textarea id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
+		<textarea id="output"></textarea>
+		<button onclick="compileAsm()">Compile</button>
+		<button onclick="compileRun()">Run & Compile</button>
+		<select id="speedSelector">
+			<option>fast</option>
+			<option>slow</option>
+		</select>
+	</body>
+	<script type="text/javascript" src="emulator.js"></script>
+	<script type="text/javascript" src="lex.js"></script>
+	<script type="text/javascript" src="compile.js"></script>
+	<script>
+	var code = document.getElementById("code");
+	var output = document.getElementById("output");
+
+	function compileAsm() {
+		var asm = compile(code.value.split("\n"));
+		console.log(asm);
+		output.value = "";
+		output.value += asm;
+		return asm;
+	}
+
+	function compileRun() {
+		runCode(compileAsm());
+	}
+
+	function runCode(brainflake) {
+		var mem = {
+			top: [0, 0, 0, 0, 0, 0],
+			topP: 0,
+			bottom: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			bottomP: 0
+		};
+
+		output.value += "\n-> Interpreter Result:\n";
+		execute(mem, brainflake, speedSelector.value);
+	}
+
+	document.getElementById("programSelector").onchange = function() {
+		code.value = demos[this.value];
+	}
+
+	// Raw string demos. Yay, messy me.
+	var demos = {
+		"std.casm": `; CrypticASM Standard Library
+; Contains add and mult
+
+var add_first 0 ; initial integer
+var add_second 0 ; second integer (will be zero)
+
+var mult_first 2
+var mult_second 2
+
+var std_result 0
+var std_i 0
+
+jmp end ; jmp program start
+
+; Add two integers
+add:
+	cmp add_second 0 add_stop ; is d zero? then stop
+	add add_first 1 ; increase first and
+	sub add_second 1 ; decrease second
+	jmp add
+add_stop:
+ret
+
+; Multiply
+mult:
+	cmp mult_second 0 mult_end
+
+	mov std_i mult_first
+
+	mult_add:
+		cmp std_i 0 mult_add_end
+		add std_result 1
+		sub std_i 1
+		jmp mult_add
+	mult_add_end:
+
+	sub mult_second 1
+jmp mult
+mult_end:
+ret
+
+end:
+
+
+
+mov add_second 50
+mov add_first 50
+call add
+out add_first`
+	};
+
+	code.value = demos["std.casm"];
+	</script>
+</html>

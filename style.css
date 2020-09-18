@@ -19,6 +19,12 @@ html, body {
 	tab-size: 4;
 }
 
+#programSelector {
+	width: 50%;
+	display: block;
+	user-select: none;
+}
+
 #output {
 	float: right;
 }
