@@ -1,3 +1,95 @@
+// For Node.JS
+module.exports = {
+	compile: compile
+}
+
+function lex(string) {
+	var tokens = [];
+
+	for (var c = 0; c < string.length; c++) {
+		// Skip nothing
+		if (" \n\t".includes(string[c])) {
+			continue;
+		}
+
+		tokens.push({value: "", type: ""});
+		var current = tokens[tokens.length - 1];
+
+		if (isAlpha(string[c])) {
+			current.type = "text";
+			while (isAlpha(string[c])) {
+				current.value += string[c];
+				c++;
+			}
+
+			// Quit on detection of label
+			if (string[c] == ":") {
+				current.type = "label";
+				return tokens;
+			}
+
+			// Test for selector "asd[1]"
+			if (string[c] == "[") {
+				current.selector = "";
+				c++;
+				while (string[c] != "]") {
+					current.selector += string[c];
+					c++;
+				}
+			}
+		} else if (string[c] == ";") {
+			while (c < string.length) {
+				c++;
+			}
+
+			// If we have not done any other tokens
+			if (tokens.length == 1) {
+				return [];
+			}
+		} else if (isNum(string[c])) {
+			current.type = "int";
+			while (isNum(string[c])) {
+				current.value += string[c];
+				c++;
+			}
+
+			c--;
+		} else if (string[c] == "'") {
+			current.type = "char";
+			c++;
+			current.value = string[c];
+			c += 2;
+
+		} else if (string[c] == "\"") {
+			current.type = "string";
+			c++;
+			while (string[c] != "\"") {
+				current.value += string[c];
+				c++;
+			}
+		}
+	}
+
+	return tokens;
+}
+
+function isAlpha(char) {
+	if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".includes(char)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function isNum(char) {
+	if ("0123456789".includes(char)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 function compile(array) {
 	var output = "";
 
@@ -18,7 +110,7 @@ function compile(array) {
 			labels[l] = Object.keys(labels).length;
 		}
 	}
-	
+
 	var memoryUsed = 0;
 	var memoryPlace = 0;
 
@@ -41,7 +133,7 @@ function compile(array) {
 				runAt(rawPosition(tokens[2]), "^");
 				output += "v";
 			} else {
-				output += "!";
+				//output += "!";
 				output += putChar(parseTokenData(tokens[2]));
 			}
 
@@ -75,20 +167,29 @@ function compile(array) {
 				// A little bit of optmization.
 				// characters won't be added in twice.
 				// Ex: two 'l's in hello
-				var lastChar;
+				var lastChar = -1; // Don't recognise last value
 				for (var i = 0; i < tokens[1].value.length; i++) {
 					if (lastChar != tokens[1].value[i]) {
-						output += "!";
-						output += putChar(tokens[1].value[i].charCodeAt(0));
+						// Either reset and add,
+						// Or add on from the last char
+						// Also, reset first if on first char (last char not set yet)
+						if (lastChar == -1 || lastChar.charCodeAt(0) > tokens[1].value[i].charCodeAt(0)) {
+							output += "!";
+							output += putChar(tokens[1].value[i].charCodeAt(0));
+						} else {
+							output += putChar(tokens[1].value[i].charCodeAt(0) - lastChar.charCodeAt(0));
+						}
 					}
 
 					output += ".";
 					lastChar = tokens[1].value[i];
 				}
 			} else if (tokens[1].type == "text") {
+				// Variable
 				runAt(rawPosition(tokens[1]), ".");
 			} else {
-				output += "!" + putChar(parseTokenData(tokens[1]));
+				// char or int
+				output += "!" + putChar(parseTokenData(tokens[1])) + ".";
 			}
 
 			break;

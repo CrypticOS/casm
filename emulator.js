@@ -1,7 +1,10 @@
 // Execute CrytpicASM
 var loop;
+var a;
 function execute(stack, code, speed) {
+	a = stack;
 	var labels = [];
+	var inputChar = 0;
 
 	for (var c = 0; c < code.length; c++) {
 		if (code[c] == "|") {
@@ -10,19 +13,22 @@ function execute(stack, code, speed) {
 	}
 
 	clearInterval(loop);
-
+	var c = 0;
 	if (speed == "fast") {
 		var i = 0;
-		for (var c = 0; c < code.length; c++) {
+		for (; c < code.length; c++) {
 			i++;
-			if (i > 10000) {alert("Passed 10k, stopped for safety");}
+			if (i > 10000000) {alert("Passed 10 Million, stopped for safety");}
 			execChar();
 		}
+
+		output.value += "\nDone.";
+		console.log(stack);
 	} else if (speed == "slow") {
-		var c = 0;
 		loop = setInterval(function() {
 			if (c > code.length) {
 				output.value += "\nDone.";
+				console.log(stack);
 				clearInterval(loop);
 				return;
 			}
@@ -72,22 +78,27 @@ function execute(stack, code, speed) {
 			break;
 
 		case '.':
+			if (stack.bottom[stack.bottomP] == 0) {
+				console.log(c, JSON.stringify(stack));
+			}
 			output.value += String.fromCharCode(
 				stack.bottom[stack.bottomP]
 			);
 
 			break;
 		case ',':
-			stack.bottom[stack.bottomP] = prompt("Enter char").charCodeAt(0);
-
+			stack.bottom[stack.bottomP] = input.value[inputChar].charCodeAt(0);
+			inputChar++;
 			break;
 		case '?':
+			//console.log(stack.top[stack.topP + 1], stack.top[stack.topP + 2], stack.top[stack.topP]);
 			if (stack.top[stack.topP + 1] == stack.top[stack.topP + 2]) {
 				c = labels[stack.top[stack.topP] - 1];
 			}
 
 			break;
 		case '$':
+			//console.log(labels[stack.top[stack.topP] - 1]);
 			c = labels[stack.top[stack.topP] - 1];
 			break;
 		}

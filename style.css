@@ -20,9 +20,19 @@ html, body {
 }
 
 #programSelector {
+	float: left;
+}
+
+#input {
+	float: right;
+}
+
+.top {
 	width: 50%;
+	box-sizing: border-box;
 	display: block;
 	user-select: none;
+	border: transparent;
 }
 
 #output {

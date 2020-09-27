@@ -6,9 +6,10 @@
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
-		<select id="programSelector">
+		<select id="programSelector" class="top">
 			<option>std.casm</option>
 		</select>
+		<input id="input" class="top" value=".+0">
 		<textarea id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
 		<textarea id="output"></textarea>
 		<button onclick="compileAsm()">Compile</button>
@@ -24,6 +25,7 @@
 	<script>
 	var code = document.getElementById("code");
 	var output = document.getElementById("output");
+	var input = document.getElementById("input");
 
 	function compileAsm() {
 		var asm = compile(code.value.split("\n"));
@@ -39,7 +41,7 @@
 
 	function runCode(brainflake) {
 		var mem = {
-			top: [0, 0, 0, 0, 0, 0],
+			top: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			topP: 0,
 			bottom: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			bottomP: 0
@@ -61,7 +63,7 @@
 var add_first 0 ; initial integer
 var add_second 0 ; second integer (will be zero)
 
-var mult_first 2
+var mult_first 3
 var mult_second 2
 
 var std_result 0
@@ -100,10 +102,9 @@ end:
 
 
 
-mov add_second 50
-mov add_first 50
-call add
-out add_first`
+call mult
+add std_result '0'
+out std_result`
 	};
 
 	code.value = demos["std.casm"];
