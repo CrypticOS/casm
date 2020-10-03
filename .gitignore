@@ -1,4 +1,6 @@
 test
 *.o
 test.o
-compiler.o	
+compiler.o
+nasm
+nasm.asm

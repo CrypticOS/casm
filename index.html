@@ -20,7 +20,6 @@
 		</select>
 	</body>
 	<script type="text/javascript" src="emulator.js"></script>
-	<script type="text/javascript" src="lex.js"></script>
 	<script type="text/javascript" src="compile.js"></script>
 	<script>
 	var code = document.getElementById("code");
@@ -57,54 +56,142 @@
 
 	// Raw string demos. Yay, messy me.
 	var demos = {
-		"std.casm": `; CrypticASM Standard Library
-; Contains add and mult
+		"std.casm": `; CrypticOS Kernel / Internal standard function library
 
-var add_first 0 ; initial integer
-var add_second 0 ; second integer (will be zero)
+; operation:
+; 1 = store char
+; 2 = get char
+; Function parameters
+var std_third 0
+var std_second 0
+var std_first 0
 
-var mult_first 3
-var mult_second 2
+var std_result 0 ; Output variable
+var std_i 0 ; General purpose incremental variable
 
-var std_result 0
-var std_i 0
+jmp std_end ; jmp program start
 
-jmp end ; jmp program start
+; std_first = operation
+; std_second = location
+; std_third = value to set/get
+char:
+	inl "d<<<^>>>" ; Reserve for operation
+	inl "d<<<<^>>>>" ; reserve for location
+	inl "d<<<<<^>>>>>d" ; Reserve for value to set or value to get
+	inl "d" ; reserve for temp
+	inl "d" ; reserve for label, set in loop (label)
+	inl "!^d" ; store zero to compare (value1)
+	inl "aaaaavddddd^" ; store value from fourth cell (value2)
+	inl "aa" ; go back
+	char_back:
+		inl "a^d" ; store current cell temp
+		inl "!+++^"; Go to label 3 (char_back_end)
+		inl "avd" ; restore temp value
+		inl "<"
 
-; Add two integers
-add:
-	cmp add_second 0 add_stop ; is d zero? then stop
-	add add_first 1 ; increase first and
-	sub add_second 1 ; decrease second
-	jmp add
-add_stop:
+		; to go matching register + 1, store temp,
+		; sub matching register, return back
+		inl "ddd^"
+		inl "av-^dvaaa"
+	inl "?" ; equ
+
+	; Goto
+	inl "a^d" ; store current cell temp
+	inl "!++^"; Go to label 2 (char_back)
+	inl "avd" ; restore temp value
+	inl "$"
+
+	char_back_end:
+	; Store value.
+
+	inl "a^" ; store temp
+	inl "d!*-^" ; store label 4 (char_set)
+	inl "d!+^" ; store 1
+	inl "aaaaavdddddd^" ; store operation reg
+	inl "aa" ; back to label
+	inl "avd" ; restore value
+	inl "?"
+
+	; If operation is not 1 (2)
+	inl "aavdd" ; set value
+	char_set:
+	; If operation is 1:
+	inl "aa^dd" ; put char into value
+
+	; Now we are currently in the label reg.
+	; Go back to temp reg and store current memory cell.
+	inl "a^d"
+
+	inl "d" ; space for label
+	inl "!^d" ; store zero to compare
+	inl "aaaaavddddd^" ; store 4 to compare (matching register)
+	inl "aa" ; go back
+	inl "avd" ; Restore temp value
+	char_forward:
+		inl "a^d" ; store current cell temp
+		inl "!*+^"; Go to label 5 (char_forward_back)
+		inl "avd" ; restore temp value
+		inl ">"
+
+		; to go matching register + 1, store temp,
+		; sub matching register, return back
+		inl "ddd^"
+		inl "av-^dvaaa"
+	inl "?" ; equ
+
+	; Goto
+	inl "a^d" ; store current cell temp
+	inl "!*^"; Go to label 4 (char_forward)
+	inl "avd" ; restore temp value
+	inl "$"
+	char_forward_back:
+	inl "aa<<v>>aaa" ; go to initial value, when started
 ret
 
-; Multiply
-mult:
-	cmp mult_second 0 mult_end
+std_add:
+	cmp std_second 0 std_add_stop ; is d zero? then stop
+	add std_first 1 ; increase first and
+	sub std_second 1 ; decrease second
+	jmp std_add
+	std_add_stop:
+	mov std_result std_first
+ret
 
-	mov std_i mult_first
+; divmod algorithm
+std_divide:
+	add std_result 1
+	mov std_i std_second
+	std_divide_sub:
+		cmp std_i 0 std_divide
+		sub std_i 1
+		cmp std_first 0 std_divide_exit
+		sub std_first 1
+	jmp std_divide_sub
+	std_divide_exit:
 
-	mult_add:
-		cmp std_i 0 mult_add_end
+	; Do offsets
+	sub std_result 1
+	add std_i 1
+
+
+ret
+
+std_mult:
+	cmp std_second 0 std_mult_end
+	mov std_i std_first
+	std_mult_add:
+		cmp std_i 0 std_mult_add_end
 		add std_result 1
 		sub std_i 1
-		jmp mult_add
-	mult_add_end:
-
-	sub mult_second 1
-jmp mult
-mult_end:
+		jmp std_mult_add
+	std_mult_add_end:
+	sub std_second 1
+	jmp std_mult
+	std_mult_end:
 ret
 
-end:
-
-
-
-call mult
-add std_result '0'
-out std_result`
+std_end:
+`
 	};
 
 	code.value = demos["std.casm"];

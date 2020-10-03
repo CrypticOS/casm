@@ -67,6 +67,13 @@ function lex(string) {
 				current.value += string[c];
 				c++;
 			}
+		} else if (string[c] == "[") {
+			current.type = "location";
+			c++;
+			while (string[c] != "]") {
+				current.value += string[c];
+				c++;
+			}
 		}
 	}
 
@@ -106,6 +113,15 @@ function compile(array) {
 
 		if (tokens[0].type == "label") {
 			labels[tokens[0].value] = Object.keys(labels).length;
+		} else if (tokens[0].value == "include") {
+			var findCode = demos[tokens[1].value].split("\n");
+			for (l2 in findCode) {
+				array.splice(l, 0, findCode[l2]);
+				l++;
+			}
+
+			array[l] = "; Ignore";
+			l -= findCode.length;
 		} else if (tokens[0].type == "text" && tokens[0].value == "call") {
 			labels[l] = Object.keys(labels).length;
 		}
@@ -129,11 +145,11 @@ function compile(array) {
 
 		switch(tokens[0].value) {
 		case "var":
+			output += "!"; // Reset value just in case
 			if (tokens[2].type == "text") {
 				runAt(rawPosition(tokens[2]), "^");
 				output += "v";
 			} else {
-				//output += "!";
 				output += putChar(parseTokenData(tokens[2]));
 			}
 
@@ -212,6 +228,8 @@ function compile(array) {
 			output += "|"; // Put label
 
 			break;
+		case "in":
+
 		case "ret":
 			output += "a$"; // Goto previous reg.
 			break;
@@ -224,6 +242,11 @@ function compile(array) {
 
 				runAt(rawPosition(tokens[2]), "^");
 				runAt(rawPosition(tokens[1]), "v");
+			} else if (tokens[2].type == "location") {
+				runAt(
+					rawPosition(tokens[1]),
+					"!" + putChar(memoryPlace - variables[tokens[2].value].position)
+				);
 			} else {
 				runAt(
 					rawPosition(tokens[1]),
@@ -275,6 +298,23 @@ function compile(array) {
 			break;
 		}
 
+		// function getValue(token) {
+		// 	if (token.type == "text") {
+		// 		if (token.value == "getchar") {
+		// 			runAt(rawPosition(tokens[1]), ",");
+		// 			continue;
+		// 		}
+		//
+		// 		runAt(rawPosition(token), "^");
+		// 		runAt(rawPosition(token), "v");
+		// 	} else {
+		// 		runAt(
+		// 			rawPosition(tokens[1]),
+		// 			"!" + putChar(parseTokenData(tokens[2]))
+		// 		);
+		// 	}
+		// }
+
 		// Run code at after moving to a certain spot, then return.
 		function runAt(spot, code) {
 			var oldSpot = memoryPlace;
@@ -321,9 +361,14 @@ function compile(array) {
 
 	}
 
-	// Minimize output
+	// Minimize output, remove useless brackets
 	while (output.includes("><")) {
 		output = output.replace("><", "");
+	}
+
+	// Minimize output, remove useless ad.
+	while (output.includes("da")) {
+		output = output.replace("da", "");
 	}
 
 	return output;

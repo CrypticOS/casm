@@ -78,9 +78,6 @@ function execute(stack, code, speed) {
 			break;
 
 		case '.':
-			if (stack.bottom[stack.bottomP] == 0) {
-				console.log(c, JSON.stringify(stack));
-			}
 			output.value += String.fromCharCode(
 				stack.bottom[stack.bottomP]
 			);
