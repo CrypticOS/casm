@@ -1,3 +1,4 @@
+// This is a simple emulator for testing programs
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -4,3 +4,4 @@ test.o
 compiler.o
 nasm
 nasm.asm
+compiler

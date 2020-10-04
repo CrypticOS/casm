@@ -1,6 +1,6 @@
 // Node CLI Compiler
 // I'm bad at nodejs
-var compiler = require("./compile.js");
+var compiler = require("../compile.js");
 var fs = require("fs");
 
 fs.readFile(process.argv[2], "utf8", function(err, data) {
