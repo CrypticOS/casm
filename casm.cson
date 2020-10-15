@@ -1,0 +1,95 @@
+"fileTypes": [
+    "casm"
+]
+
+"name": "CASM Assembly"
+"scopeName": "petabyte.crypticos.casm"
+
+"patterns": [
+    {
+        "begin": ";"
+        "end": "\n"
+        "name": "comment.line"
+    }
+    {
+        "match": "(?i)(^|\\s)%\\s*00?(?=\\b)"
+        "name": "keyword.meta.preprocessor"
+    }
+    {
+        "match": "^\\s*([A-Za-z\\$\\._\\?][0-9A-Za-z_\\$\\#@~\\.\\?]*)\\s*:"
+        "name": "entity.name.function.label"
+    }
+    {
+        "match": "(?i)\\b(mov|out|var|jmp|call|run|set|arr|sub|add|cmp|ret|inl)(?=\\b)"
+        "name": "keyword.mnemonic"
+    }
+    {
+        "match": "(^|\\b)([A-Za-z_][0-9A-Za-z_]*)(\\.)([0-9A-Za-z_]+)(\\b)"
+        "captures":
+            "4": "name": "entity.name.variable.identifier"
+    }
+    {
+        "match": "\\b([\\+-]?(0[dDtT])?[0-9_]+\\.[0-9_]*([eE][\\+-]?[0-9_]*)?)(?=\\b)"
+        "name": "constant.numeric.decimal.dec.float"
+    }
+    {
+        # According to the NASM documentation, all of the following are
+        # equivalent: 11001000b, 1100_1000b, 1100_1000y, 0b1100_1000,
+        # 0y1100_1000. This handles all of them. Upper/lower case both work.
+        "match": "\\b([01_]+[bByY]|0[bByY][01_]+)(?=\\b)"
+        "name": "constant.numeric.binary.bin"
+    }
+    {
+        # According to the NASM documentation, all of the following are
+        # equivalent: 200, 0200, 0200d, 0d200.
+        "match": "\\b([0-9_]+[dDtT]?|0[dDtT][0-9_]+)(?=\\b)"
+        "name": "constant.numeric.decimal.dec"
+    }
+    {
+        "match": "(?:(?:\\+|-|\\*|/|%|=|<|>|,|&|\\^|\\||:|~|\\(|\\[|\\s)(\\${1,2})(?=\\+|-|\\*|/|%|=|<|>|,|&|\\^|\\||:|~|\\)|\\]|\\s))"
+        "captures":
+            "1": "name": "keyword.punctuation"
+    }
+    {
+        "match": "\\b(<<|>>|\\+|-|\\*|/|%|<=|>=|<|>)\\b"
+        "name": "entity.operator"
+    }
+    {
+        "begin": "\""
+        "beginCaptures":
+            "0": "name": "string.quoted.double.punctuation.definition.begin"
+        "end": "\""
+        "endCaptures":
+            "0": "name": "string.quoted.double.punctuation.definition.end"
+        "name": "string.quoted.double.punctuation.definition"
+    }
+    {
+        "begin": "'"
+        "beginCaptures":
+            "0": "name": "string.quoted.single.punctuation.begin"
+        "end": "'"
+        "endCaptures":
+            "0": "name": "string.quoted.single.punctuation.end"
+        "name": "string.quoted.single.punctuation.definition"
+    }
+    {
+        "begin": "`"
+        "beginCaptures":
+            "0": "name": "string.quoted.backtick.punctuation.begin"
+        "end": "`"
+        "endCaptures":
+            "0": "name": "string.quoted.backtick.punctuation.end"
+        "name": "string.quoted.backtick.punctuation.definition"
+        "patterns": [
+            {
+                "include": "#escaped_characters"
+            }
+        ]
+    }
+]
+"repository":
+    "escaped_characters":
+        {
+            "match": "\\\\([\"'`\\\\?abtnvfre\\n\\r]|[0-8]{1,3}|x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})"
+            "name": "constant.character.escape"
+        }
