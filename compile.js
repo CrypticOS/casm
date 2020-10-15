@@ -1,4 +1,5 @@
 // For Node.JS
+var fs = require("fs");
 module.exports = {
 	compile: compile
 }
@@ -81,7 +82,7 @@ function lex(string) {
 }
 
 function isAlpha(char) {
-	if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".includes(char)) {
+	if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.".includes(char)) {
 		return true;
 	} else {
 		return false;
@@ -114,7 +115,8 @@ function compile(array) {
 		if (tokens[0].type == "label") {
 			labels[tokens[0].value] = Object.keys(labels).length;
 		} else if (tokens[0].value == "include") {
-			var findCode = demos[tokens[1].value].split("\n");
+			var data = fs.readFileSync(tokens[1].value, "utf8");
+			var findCode = data.split("\n");
 			for (l2 in findCode) {
 				array.splice(l, 0, findCode[l2]);
 				l++;
@@ -228,8 +230,6 @@ function compile(array) {
 			output += "|"; // Put label
 
 			break;
-		case "in":
-
 		case "ret":
 			output += "a$"; // Goto previous reg.
 			break;
@@ -246,6 +246,18 @@ function compile(array) {
 				runAt(
 					rawPosition(tokens[1]),
 					"!" + putChar(memoryPlace - variables[tokens[2].value].position)
+				);
+			} else if (tokens[2].type == "string") {
+				// Convert strings
+				var temp = "";
+				for (var i = 0; i < tokens[2].value.length; i++) {
+					temp += putChar(tokens[2].value[i].charCodeAt(0));
+					temp += ">";
+				}
+
+				runAt(
+					rawPosition(tokens[1]),
+					temp
 				);
 			} else {
 				runAt(

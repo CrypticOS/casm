@@ -10,12 +10,13 @@ int main(int argc, char *argv[]) {
 	fgets(input, MAX, reader);
 	fclose(reader);
 
-    int memtop[50] = {0};
+    int memtop[100] = {0};
     int membottom[1000] = {0};
-    int topp = 0;
+
+	int topp = 0;
     int bottomp = 0;
 
-    int labels[50];
+    int labels[500];
     int l = 0;
     for (int c = 0; input[c] != '\0'; c++) {
         if (input[c] == '|') {
@@ -28,6 +29,11 @@ int main(int argc, char *argv[]) {
     for (int c = 0; input[c] != '\0'; c++) {
         switch (input[c]) {
 		case ',':
+			if (argv[2][get] == '\0') {
+				puts("Read outside input, stopping\n");
+				return -1;
+			}
+
 			membottom[bottomp] = argv[2][get];
 			get++;
 			break;
@@ -47,7 +53,8 @@ int main(int argc, char *argv[]) {
             membottom[bottomp]--;
             break;
         case '.':
-            putchar(membottom[bottomp]);
+            //printf("%d ", membottom[bottomp]);
+			putchar(membottom[bottomp]);
             break;
         case '>':
             bottomp++;
@@ -57,6 +64,7 @@ int main(int argc, char *argv[]) {
             break;
         case 'd':
             topp++;
+			//printf("%d %d\n", c, topp);
             break;
         case 'a':
             topp--;
@@ -79,7 +87,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-	putchar('\n');
+	//putchar('\n');
+
+	//printf("topp = %d", topp);
 
     return 0;
 }

@@ -1,0 +1,22 @@
+
+
+Kernel Functions:
+subv
+addv
+mult
+div
+get
+...
+
+var		>
+arr		>>
+add		<+>
+sub		<->
+ret		a$
+jmp		!+^$
+equ		d!+^d!+^aa!++^?
+out 	inl
+
+
+var a 'A'
+add a 1
