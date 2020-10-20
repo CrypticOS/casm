@@ -278,26 +278,22 @@ function compile(array) {
 			output += tokens[1].value;
 			break;
 		case "jmp":
-			//output += "d^a"; // Store current cell up // old
 			output += "!"; // Reset cell for next adding
 			output += putChar(labels[checkLabel(tokens[1]).value] + 1);
-			//output += "^dva"; // move up, then restore original value // old
 			output += "^$";
 			break;
 		case "cmp":
 			// Store temp in register 4. Don't go all back since
 			// We will use the previous 3 registers
-			// output += "ddd^a"; // old
 			output += "ddda";
 
 			// Copy variable
 			output += "!";
-			runAt(rawPosition(tokens[1]), "^");
+			getValue(tokens[1], "^");
 
 			// Copy char
 			output += "a!";
-			output += putChar(parseTokenData(tokens[2]));
-			output += "^";
+			getValue(tokens[2], "^");
 
 			// Copy in label
 			output += "a!"
@@ -310,22 +306,19 @@ function compile(array) {
 			break;
 		}
 
-		// function getValue(token) {
-		// 	if (token.type == "text") {
-		// 		if (token.value == "getchar") {
-		// 			runAt(rawPosition(tokens[1]), ",");
-		// 			continue;
-		// 		}
-		//
-		// 		runAt(rawPosition(token), "^");
-		// 		runAt(rawPosition(token), "v");
-		// 	} else {
-		// 		runAt(
-		// 			rawPosition(tokens[1]),
-		// 			"!" + putChar(parseTokenData(tokens[2]))
-		// 		);
-		// 	}
-		// }
+		function getValue(token, code) {
+			if (token.type == "text") {
+				if (token.value == "getchar") {
+					runAt(rawPosition(tokens[1]), ",");
+					return;
+				} else {
+					runAt(rawPosition(token), code);
+				}
+			} else {
+				putChar(parseTokenData(tokens[2]));
+				output += code;
+			}
+		}
 
 		// Run code at after moving to a certain spot, then return.
 		function runAt(spot, code) {

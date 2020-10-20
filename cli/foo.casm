@@ -1,0 +1,34 @@
+var ah, 0
+var al, 0
+var ch, 0
+var cl, 0
+var dh, 0
+var dl, 0
+
+mov al, 5 ; mode 12
+call setVideo
+
+call drawPixel
+
+jmp end
+
+setVideo:
+	mov ah, 0
+	call int
+ret
+
+drawPixel:
+	mov ah, 12
+	mov al, 5
+	mov ch, 0
+	mov cl, 10 ; x = 10
+	mov dh, 0
+	mov dl, 10 ; y = 10
+	call int
+ret
+
+int:
+	inl "<<<<<<<,>>>>>>"
+ret
+
+end:

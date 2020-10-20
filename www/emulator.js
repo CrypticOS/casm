@@ -84,6 +84,7 @@ function execute(stack, code, speed) {
 
 			break;
 		case ',':
+			//console.log(stack.bottomP);
 			stack.bottom[stack.bottomP] = input.value[inputChar].charCodeAt(0);
 			inputChar++;
 			break;
