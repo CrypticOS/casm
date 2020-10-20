@@ -228,7 +228,6 @@ function compile(array) {
 			output += "^$"; // Up, right (for when return is called), and goto
 
 			output += "|"; // Put label
-
 			break;
 		case "ret":
 			output += "a$"; // Goto previous reg.
@@ -285,7 +284,7 @@ function compile(array) {
 		case "cmp":
 			// Store temp in register 4. Don't go all back since
 			// We will use the previous 3 registers
-			output += "ddda";
+			output += "dd";
 
 			// Copy variable
 			output += "!";
@@ -315,7 +314,7 @@ function compile(array) {
 					runAt(rawPosition(token), code);
 				}
 			} else {
-				putChar(parseTokenData(tokens[2]));
+				output += putChar(parseTokenData(tokens[2]));
 				output += code;
 			}
 		}
@@ -363,7 +362,6 @@ function compile(array) {
 
 			return token;
 		}
-
 	}
 
 	// Minimize output, remove useless brackets
