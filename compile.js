@@ -314,7 +314,7 @@ function compile(array) {
 					runAt(rawPosition(token), code);
 				}
 			} else {
-				output += putChar(parseTokenData(tokens[2]));
+				output += putChar(parseTokenData(token));
 				output += code;
 			}
 		}

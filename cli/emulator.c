@@ -2,21 +2,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX 10000
+#define MAX_INPUT 10000
+#define MAX_TOP 10000
+#define MAX_BOTTOM 10000
+#define MAX_LABELS 10000
 
 int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		puts("No file.");
+		return 0;
+	}
+
 	FILE *reader = fopen(argv[1], "r");
-	char input[MAX];
-	fgets(input, MAX, reader);
+	if (reader == NULL) {
+		puts("Bad file.");
+		return 0;
+	}
+	
+	char *input = malloc(sizeof(char) * MAX_INPUT);
+	fgets(input, MAX_INPUT, reader);
 	fclose(reader);
 
-    int memtop[100] = {0};
-    int membottom[1000] = {0};
+	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
+    unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
-	int topp = 0;
-    int bottomp = 0;
+	size_t topp = 0;
+    size_t bottomp = 0;
 
-    int labels[500];
+	size_t *labels = malloc(sizeof(size_t) * MAX_LABELS);
     int l = 0;
     for (int c = 0; input[c] != '\0'; c++) {
         if (input[c] == '|') {
@@ -53,7 +66,6 @@ int main(int argc, char *argv[]) {
             membottom[bottomp]--;
             break;
         case '.':
-            //printf("%d ", membottom[bottomp]);
 			putchar(membottom[bottomp]);
             break;
         case '>':
@@ -64,7 +76,6 @@ int main(int argc, char *argv[]) {
             break;
         case 'd':
             topp++;
-			//printf("%d %d\n", c, topp);
             break;
         case 'a':
             topp--;
@@ -87,9 +98,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-	//putchar('\n');
+	free(input);
+	free(membottom);
+	free(memtop);
 
-	//printf("topp = %d", topp);
-
+	putchar('\n');
+	
     return 0;
 }
