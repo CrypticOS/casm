@@ -1,1 +1,0 @@
-int t[100]={0};int b[1000]={0};int y=0;int n=0;int d;int main (int argc,char *argv[]) {b[n]+=5;b[n]+=5;b[n]+=5;putchar(b[n]);return 0;g:d=t[y]+'@';}
