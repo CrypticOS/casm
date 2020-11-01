@@ -5,8 +5,8 @@
 #define MAX_TOK 10
 
 enum Types {
-	text, digit, string, label,
-	var, arr
+	TEXT, DIGIT, STRING, LABEL,
+	VAR, ARR
 };
 
 struct Token {
@@ -62,25 +62,30 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 		tokens[token].type = 0;
 		tokens[token].value = 0;
 		if (isAlpha(line[c])) {
-			tokens[token].type = text;
+			tokens[token].type = TEXT;
 			while (isAlpha(line[c])) {
 				tokens[token].text[tokens[token].length] = line[c];
 				tokens[token].length++;
 
 				c++;
 			}
+
+			if (line[c] == ':') {
+				tokens[token].type = LABEL;
+				c++;
+			}
 		} else if (isDigit(line[c])) {
-			tokens[token].type = digit;
+			tokens[token].type = DIGIT;
 			while (isDigit(line[c])) {
 				tokens[token].value *= 10;
 				tokens[token].value += (line[c] - '0');
 				c++;
 			}
 		} else if (line[c] == '\'') {
-			tokens[token].type = digit;
+			tokens[token].type = DIGIT;
 			c++;
 			tokens[token].value = line[c];
-			c += 2; // Skip ', onto next char
+			c += 2; // Skip ' and goto next char
 		}
 
 		tokens[token].text[tokens[token].length] = '\0';
@@ -92,7 +97,10 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 
 // Main instruction out function
 void out(char *string) {
-	printf(string);
+	while (*string != '\0') {
+		putchar(*string);
+		string++;
+	}
 }
 
 void putInt(int value) {
@@ -126,7 +134,7 @@ void got(struct Memory *memory, int place) {
 }
 
 // Locate var, arr, lbl, from objects in memory
-int findObject(struct Memory *memory, char *name) {
+int locateObject(struct Memory *memory, char *name) {
 	for (int i = 0; i < memory->length; i++) {
 		if (!strcmp(memory->d[i].name, name)) {
 			return i;
@@ -136,6 +144,17 @@ int findObject(struct Memory *memory, char *name) {
 	return -1;
 }
 
+// Not a very useful function, to avoid repeition
+void gotVar(struct Memory *memory, char *var) {
+	int location = locateObject(memory, var);
+	if (location == -1) {
+		puts("ERROR: Variable not found.");
+		exit(0);
+	}
+	
+	got(memory, memory->d[location].location);
+}
+
 void assemble() {
 	struct Memory memory;
 	memory.length = 0;
@@ -143,12 +162,27 @@ void assemble() {
 	memory.position = 0;
 	struct Token tokens[MAX_TOK];
 	
-	char *text[2] = {
-		"var a 9",
-		"got 1"
+	char *text[4] = {
+		"var a 3",
+		"add a 50",
+		"sub a 2",
+		"prt a"
 	};
 
-	for (int l = 0; l < 2; l++) {
+	// Lex all labels first.
+	int labelsFound = 0;
+	for (int l = 0; l < 4; l++) {
+		int length = lex(tokens, text[l]);
+		if (tokens[0].type == LABEL) {
+			strcpy(memory.d[memory.length].name, tokens[0].text);
+			memory.d[memory.length].location = labelsFound;
+			memory.d[memory.length].type = LABEL;
+			memory.length++;
+		}
+	}
+
+	// Lex regular instructions
+	for (int l = 0; l < 4; l++) {
 		int length = lex(tokens, text[l]);
 
 		// Check instructions
@@ -164,6 +198,20 @@ void assemble() {
 		} else if (!strcmp(tokens[0].text, "got")) {
 			got(&memory, tokens[1].value);
 		} else if (!strcmp(tokens[0].text, "prt")) {
+			gotVar(&memory, tokens[1].text);
+			out(".");
+		} else if (!strcmp(tokens[0].text, "add")) {
+			gotVar(&memory, tokens[1].text);
+			putInt(tokens[2].value);
+		} else if (!strcmp(tokens[0].text, "sub")) {
+			gotVar(&memory, tokens[1].text);
+
+			// Since there are no %*+ for subtract, we must
+			// do solely -s instead.
+			while (tokens[2].value != 0) {
+				out("-");
+				tokens[2].value--;
+			}
 		}
 	}
 }
