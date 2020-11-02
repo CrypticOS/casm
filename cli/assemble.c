@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define MAX_TOK 10
+#define MAX_LINE 100
 
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
@@ -134,9 +135,10 @@ void got(struct Memory *memory, int place) {
 }
 
 // Locate var, arr, lbl, from objects in memory
-int locateObject(struct Memory *memory, char *name) {
+// from type
+int locateObject(struct Memory *memory, char *name, int type) {
 	for (int i = 0; i < memory->length; i++) {
-		if (!strcmp(memory->d[i].name, name)) {
+		if (!strcmp(memory->d[i].name, name) && memory->d[i].type == type) {
 			return i;
 		}
 	}
@@ -146,7 +148,7 @@ int locateObject(struct Memory *memory, char *name) {
 
 // Not a very useful function, to avoid repeition
 void gotVar(struct Memory *memory, char *var) {
-	int location = locateObject(memory, var);
+	int location = locateObject(memory, var, VAR);
 	if (location == -1) {
 		puts("ERROR: Variable not found.");
 		exit(0);
@@ -155,24 +157,26 @@ void gotVar(struct Memory *memory, char *var) {
 	got(memory, memory->d[location].location);
 }
 
-void assemble() {
+void assemble(char *file) {
 	struct Memory memory;
 	memory.length = 0;
 	memory.used = 0;
 	memory.position = 0;
 	struct Token tokens[MAX_TOK];
-	
-	char *text[4] = {
-		"var a 3",
-		"add a 50",
-		"sub a 2",
-		"prt a"
-	};
 
+	FILE *reader;
+	char buffer[MAX_LINE];
+	
 	// Lex all labels first.
 	int labelsFound = 0;
-	for (int l = 0; l < 4; l++) {
-		int length = lex(tokens, text[l]);
+	reader = fopen(file, "r");
+	if (reader == NULL) {
+		puts("ERR: Bad file");
+		exit(0);
+	}
+
+	while (fgets(buffer, MAX_LINE, reader) != NULL) {
+		int length = lex(tokens, buffer);
 		if (tokens[0].type == LABEL) {
 			strcpy(memory.d[memory.length].name, tokens[0].text);
 			memory.d[memory.length].location = labelsFound;
@@ -181,18 +185,23 @@ void assemble() {
 		}
 	}
 
+	// Close and reopen to pointer
+	fclose(reader);
+	reader = fopen(file, "r");
+
 	// Lex regular instructions
-	for (int l = 0; l < 4; l++) {
-		int length = lex(tokens, text[l]);
+	while (fgets(buffer, MAX_LINE, reader) != NULL) {
+		int length = lex(tokens, buffer);
 
 		// Check instructions
 		if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
-			memory.d[memory.length].length = 1; // vars are 1 int wide
 			memory.d[memory.length].location = memory.position;
+			memory.d[memory.length].length = 1; // vars are 1 int wide
+			memory.d[memory.length].type = VAR;
 			memory.length++;
-
+			
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "got")) {
@@ -205,7 +214,7 @@ void assemble() {
 			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
-
+			
 			// Since there are no %*+ for subtract, we must
 			// do solely -s instead.
 			while (tokens[2].value != 0) {

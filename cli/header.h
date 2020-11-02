@@ -1,2 +1,2 @@
 int run(char *input);
-void assemble();
+void assemble(char *file);

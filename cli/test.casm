@@ -1,0 +1,3 @@
+var a 'A'
+add a 1
+prt a
