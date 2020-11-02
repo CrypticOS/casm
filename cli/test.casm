@@ -1,3 +1,7 @@
+; Simple CASM Test file. This assembles with
+; The C assembler/emulator.
+
 var a 'A'
-add a 1
-prt a
+top:
+	prt a
+jmp top

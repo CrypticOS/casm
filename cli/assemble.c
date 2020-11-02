@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define MAX_TOK 10
-#define MAX_LINE 100
+#define MAX_LINE 200
 
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
@@ -50,8 +50,16 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 	int c = 0;
 	int token = 0;
 	while (line[c] != '\0') {
-		if (line[c] == '\0' || line[c] == '\n') {
+		// Just in case
+		if (line[c] == '\n') {
 			return token;
+		}
+
+		// Skip comments
+		if (line[c] == ';') {
+			while (line[c] != '\n') {
+				c++;
+			}
 		}
 		
 		// Skip chars
@@ -124,12 +132,12 @@ void got(struct Memory *memory, int place) {
 	if (place > memory->position) {
 		while (place != memory->position) {
 			out(">");
-			place--;
+			memory->position++;
 		}
 	} else {
 		while (place != memory->position) {
 			out("<");
-			place++;
+			memory->position--;
 		}
 	}
 }
@@ -168,10 +176,11 @@ void assemble(char *file) {
 	char buffer[MAX_LINE];
 	
 	// Lex all labels first.
-	int labelsFound = 0;
+	int labelsFound = 1;
 	reader = fopen(file, "r");
 	if (reader == NULL) {
 		puts("ERR: Bad file");
+		fclose(reader);
 		exit(0);
 	}
 
@@ -194,14 +203,16 @@ void assemble(char *file) {
 		int length = lex(tokens, buffer);
 
 		// Check instructions
-		if (!strcmp(tokens[0].text, "var")) {
+		if (tokens[0].type == LABEL) {
+			out("|");
+		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
 			memory.d[memory.length].location = memory.position;
 			memory.d[memory.length].length = 1; // vars are 1 int wide
 			memory.d[memory.length].type = VAR;
 			memory.length++;
-			
+
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "got")) {
@@ -212,6 +223,21 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "add")) {
 			gotVar(&memory, tokens[1].text);
 			putInt(tokens[2].value);
+		} else if (!strcmp(tokens[0].text, "jmp")) {
+			int oldLocation = memory.position;
+			got(&memory, memory.used + 1); // Goto working space
+			int location = locateObject(&memory, tokens[1].text, LABEL);
+			if (location == -1) {
+				puts("ERR: Label not found");
+				fclose(reader);
+				exit(0);
+			}
+
+			out("!"); // Reset current working space cell
+			putInt(memory.d[location].location);
+			out("^"); // UP
+			got(&memory, oldLocation); // Go back to original spot
+			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
 			
