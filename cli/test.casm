@@ -1,7 +1,24 @@
-; Simple CASM Test file. This assembles with
-; The C assembler/emulator.
+; CASM test file
 
-var a 'A'
-top:
-	prt a
-jmp top
+; Test JMP/PRT/LBLs
+;jmp c:
+;a:
+;prt 'B'
+;jmp e
+;c:
+;prt 'A'
+;jmp a
+;e:
+
+jmp a
+
+b:
+prt 'A'
+ret
+
+
+a:
+run b
+run b
+
+

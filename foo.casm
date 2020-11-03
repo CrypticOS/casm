@@ -1,0 +1,51 @@
+var ah 0
+var al 0
+var ch 0
+var cl 0
+var dh 0
+var dl 0
+var bh 0
+var bl 0
+
+;mov al, 5 ; mode 12
+;call setVideo
+
+mov ah 11
+mov bh 0
+mov bl 1
+call int
+
+; Print character
+mov ah 9
+mov al 'A'
+mov ch 0
+mov cl 1 ; Print once
+mov dh 0
+mov dl 0
+mov bh 0 ; Page number
+mov bl 1 ; Color
+call int
+
+
+jmp end
+
+;setVideo:
+;	mov ah, 0
+;	call int
+;ret
+
+;drawPixel:
+;	mov ah 12
+;	mov al 5
+;	mov ch 0
+;	mov cl 10 ; x = 10
+;	mov dh 0
+;	mov dl 10 ; y = 10
+;	call int
+;ret
+
+int:
+	inl "<<<<<<<<@>>>>>>>>"
+ret
+
+end:

@@ -7,7 +7,8 @@
 
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
-	VAR, ARR
+	VAR, ARR,
+	RUN
 };
 
 struct Token {
@@ -50,14 +51,9 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 	int c = 0;
 	int token = 0;
 	while (line[c] != '\0') {
-		// Just in case
-		if (line[c] == '\n') {
-			return token;
-		}
-
 		// Skip comments
 		if (line[c] == ';') {
-			while (line[c] != '\n') {
+			while (line[c] != '\n' || line[c] == '\0') {
 				c++;
 			}
 		}
@@ -65,6 +61,11 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 		// Skip chars
 		while (line[c] == ' ' || line[c] == '\t') {
 			c++;
+		}
+
+		// Check if this is a nothing line (comments, blank)
+		if (line[c] == '\n' || line[c] == '\0') {
+			return token;
 		}
 
 		tokens[token].length = 0;
@@ -146,7 +147,8 @@ void got(struct Memory *memory, int place) {
 // from type
 int locateObject(struct Memory *memory, char *name, int type) {
 	for (int i = 0; i < memory->length; i++) {
-		if (!strcmp(memory->d[i].name, name) && memory->d[i].type == type) {
+		// Make sure to check type first. Name can sometimes be unitialized.
+		if (memory->d[i].type == type && !strcmp(memory->d[i].name, name)) {
 			return i;
 		}
 	}
@@ -154,7 +156,7 @@ int locateObject(struct Memory *memory, char *name, int type) {
 	return -1;
 }
 
-// Not a very useful function, to avoid repeition
+// Goto a variable location.
 void gotVar(struct Memory *memory, char *var) {
 	int location = locateObject(memory, var, VAR);
 	if (location == -1) {
@@ -177,6 +179,7 @@ void assemble(char *file) {
 	
 	// Lex all labels first.
 	int labelsFound = 1;
+	int line = 0;
 	reader = fopen(file, "r");
 	if (reader == NULL) {
 		puts("ERR: Bad file");
@@ -186,12 +189,25 @@ void assemble(char *file) {
 
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
 		int length = lex(tokens, buffer);
+		if (length == 0) {
+			continue;
+		}
+		
 		if (tokens[0].type == LABEL) {
 			strcpy(memory.d[memory.length].name, tokens[0].text);
 			memory.d[memory.length].location = labelsFound;
 			memory.d[memory.length].type = LABEL;
 			memory.length++;
+			labelsFound++;
+		} else if (tokens[0].type == TEXT && !strcmp(tokens[0].text, "run")) {
+			memory.d[memory.length].location = line;
+			memory.d[memory.length].length = labelsFound; // Remember labelsFound is stored in length.
+			memory.d[memory.length].type = RUN;
+			memory.length++;
+			labelsFound++;
 		}
+
+		line++;
 	}
 
 	// Close and reopen to pointer
@@ -199,10 +215,14 @@ void assemble(char *file) {
 	reader = fopen(file, "r");
 
 	// Lex regular instructions
+	line = 0;
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
 		int length = lex(tokens, buffer);
+		if (length == 0) {
+			continue;
+		}
 
-		// Check instructions
+		// Instruction Assembler
 		if (tokens[0].type == LABEL) {
 			out("|");
 		} else if (!strcmp(tokens[0].text, "var")) {
@@ -218,7 +238,13 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "got")) {
 			got(&memory, tokens[1].value);
 		} else if (!strcmp(tokens[0].text, "prt")) {
-			gotVar(&memory, tokens[1].text);
+			if (tokens[1].type == DIGIT) {
+				out("!");
+				putInt(tokens[1].value);
+			} else if (tokens[1].type == TEXT) {
+				gotVar(&memory, tokens[1].text);
+			}
+
 			out(".");
 		} else if (!strcmp(tokens[0].text, "add")) {
 			gotVar(&memory, tokens[1].text);
@@ -247,6 +273,49 @@ void assemble(char *file) {
 				out("-");
 				tokens[2].value--;
 			}
+		} else if (!strcmp(tokens[0].text, "run")) {
+			int oldLocation = memory.position;
+			got(&memory, memory.used + 1); // Goto working space
+
+			// Find run label
+			int i = 0;
+			for (; i < memory.length; i++) {
+				// Check type and line in source code.
+				if (memory.d[i].type == RUN && memory.d[i].location == line) {
+					break;
+				}
+			}
+
+			out("!"); // Reset current working space cell
+
+			// The label number is stored in length
+			// (doesn't make sense, but it is fine)
+			putInt(memory.d[i].length);
+			out("^d"); // UP, Next top cell
+
+			out("!"); // Reset current working space cell
+
+			// Find label like JMP
+			int location = locateObject(&memory, tokens[1].text, LABEL);
+			if (location == -1) {
+				puts("ERR: Label not found");
+				fclose(reader);
+				exit(0);
+			}
+
+			putInt(memory.d[location].location);
+
+			out("^"); // UP
+			got(&memory, oldLocation); // Go back to original spot
+			out("$"); // JMP
+
+			out("|"); // Put the label for the run command
+		} else if (!strcmp(tokens[0].text, "ret")) {
+			out("a$"); // BACK, JMP
 		}
+
+		line++;
 	}
+
+	fclose(reader);
 }
