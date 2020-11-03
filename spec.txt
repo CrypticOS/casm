@@ -1,22 +1,24 @@
-
-
 Kernel Functions:
-subv
-addv
-mult
-div
-get
-...
+ k.subv	d
+ k.addv	d
+ k.mult	d
+ k.div	d
+ k.get	d
+ k.high	d
+String Functions:
+ s.isAlpha
+ s.isDigit
 
-var		>
-arr		>>
-add		<+>
-sub		<->
-ret		a$
-jmp		!+^$
-equ		d!+^d!+^aa!++^?
-out 	inl
-
-
-var a 'A'
-add a 1
+Internal Instructions:
+ var	d
+ arr
+ prt	d
+ jmp	d
+ run	d
+ add	d
+ sub	d
+ ret	d
+ got	d
+ equ	
+ LBLs	d
+ inl	

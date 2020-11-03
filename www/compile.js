@@ -1,9 +1,4 @@
-// For Node.JS
-var fs = require("fs");
-module.exports = {
-	compile: compile
-}
-
+// JS Compiler
 function lex(string) {
 	var tokens = [];
 
