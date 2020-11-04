@@ -168,7 +168,7 @@ void gotVar(struct Memory *memory, char *var) {
 }
 
 // Put/got int or var
-void putVal(struct Memory *memory, struct Token *token) {	
+void putVal(struct Memory *memory, struct Token *token) {
 	if (token->type == DIGIT) {
 		got(memory, memory->used + 1); // Goto working space
 		out("!"); // Reset working space
@@ -246,6 +246,7 @@ void assemble(char *file) {
 		// Instruction Assembler
 		if (tokens[0].type == LABEL) {
 			out("|");
+			got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
@@ -272,12 +273,18 @@ void assemble(char *file) {
 			}
 
 			out(".");
+		} else if (!strcmp(tokens[0].text, "sub")) {
+			gotVar(&memory, tokens[1].text);
+			while (tokens[2].value != 0) {
+				out("-");
+				tokens[2].value--;
+			}
 		} else if (!strcmp(tokens[0].text, "add")) {
 			gotVar(&memory, tokens[1].text);
 			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "jmp")) {
 			int oldLocation = memory.position;
-			got(&memory, memory.used + 1); // Goto working space
+			got(&memory, memory.used); // Goto working space
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
@@ -291,15 +298,16 @@ void assemble(char *file) {
 			got(&memory, oldLocation); // Go back to original spot
 			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "equ")) {
+			int oldLocation = memory.position;
+			
 			out("dd"); // Next two are needed as compare values
 			putVal(&memory, &tokens[1]);
 			out("^a"); // UP, from second to first compare value
 			
-			int oldLocation = memory.position;
 			putVal(&memory, &tokens[2]);
 			out("^a"); // UP, from second to first compare value
 			
-			got(&memory, memory.used + 1); // Goto working space
+			got(&memory, memory.used); // Goto working space
 			int location = locateObject(&memory, tokens[3].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
@@ -312,7 +320,18 @@ void assemble(char *file) {
 			out("^"); // UP
 			got(&memory, oldLocation); // Go back to original spot
 			out("?"); // EQU
-		} else if (!strcmp(tokens[0].text, "sub")) {
+		} else if (!strcmp(tokens[0].text, "set")) {
+			if (tokens[2].type == DIGIT) {
+				gotVar(&memory, tokens[1].text);
+				out("!");
+				putInt(tokens[2].value);
+			} else if (tokens[2].type == TEXT) {
+				gotVar(&memory, tokens[2].text);
+				out("^");
+				gotVar(&memory, tokens[1].text);
+				out("v");
+			}
+		} else if (!strcmp(tokens[0].text, "mov")) {
 			gotVar(&memory, tokens[1].text);
 			
 			// Since there are no %*+ for subtract, we must
@@ -323,7 +342,7 @@ void assemble(char *file) {
 			}
 		} else if (!strcmp(tokens[0].text, "run")) {
 			int oldLocation = memory.position;
-			got(&memory, memory.used + 1); // Goto working space
+			got(&memory, memory.used); // Goto working space
 
 			// Find run label
 			int i = 0;
@@ -362,6 +381,7 @@ void assemble(char *file) {
 			out("a$"); // BACK, JMP
 		}
 
+		putchar('\n');
 		line++;
 	}
 

@@ -1,11 +1,11 @@
-var ga 0
-var gb 0
-k.add:
-	equ gb 0 k.add_stop ; is d zero? then stop
-	add ga 1 ; increase first and
-	sub gb 1 ; decrease second
-jmp k.add
-k.add_stop:
-add ga 50
-sub ga 2
-prt ga
+var a 3
+var b 2
+top:
+	equ a 0 end
+	sub a 1
+	add b 1
+jmp top
+end:
+add b '0'
+prt b
+
