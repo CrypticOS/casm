@@ -1,24 +1,11 @@
-; CASM test file
-
-; Test JMP/PRT/LBLs
-;jmp c:
-;a:
-;prt 'B'
-;jmp e
-;c:
-;prt 'A'
-;jmp a
-;e:
-
-jmp a
-
-b:
-prt 'A'
-ret
-
-
-a:
-run b
-run b
-
-
+var ga 0
+var gb 0
+k.add:
+	equ gb 0 k.add_stop ; is d zero? then stop
+	add ga 1 ; increase first and
+	sub gb 1 ; decrease second
+jmp k.add
+k.add_stop:
+add ga 50
+sub ga 2
+prt ga

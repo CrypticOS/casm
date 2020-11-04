@@ -167,6 +167,17 @@ void gotVar(struct Memory *memory, char *var) {
 	got(memory, memory->d[location].location);
 }
 
+// Put/got int or var
+void putVal(struct Memory *memory, struct Token *token) {	
+	if (token->type == DIGIT) {
+		got(memory, memory->used + 1); // Goto working space
+		out("!"); // Reset working space
+		putInt(token->value);
+	} else if (token->type == TEXT) {
+		gotVar(memory, token->text);
+	}
+}
+
 void assemble(char *file) {
 	struct Memory memory;
 	memory.length = 0;
@@ -214,6 +225,16 @@ void assemble(char *file) {
 	fclose(reader);
 	reader = fopen(file, "r");
 
+	/*
+	Note:
+	Some instructions require a "working space".
+	Ex: jmp, equ
+	They need a cell on the bottom to work with. This either requires:
+	Use top to store value from bototm
+	The working space (memory.used + 1)
+
+	*/
+
 	// Lex regular instructions
 	line = 0;
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
@@ -228,10 +249,15 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
-			memory.d[memory.length].location = memory.position;
+			memory.d[memory.length].location = memory.used;
 			memory.d[memory.length].length = 1; // vars are 1 int wide
 			memory.d[memory.length].type = VAR;
 			memory.length++;
+
+			// Go to the variable's spot in memory
+			// In order to add value to it.
+			got(&memory, memory.used);
+			memory.used++;
 
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
@@ -264,6 +290,28 @@ void assemble(char *file) {
 			out("^"); // UP
 			got(&memory, oldLocation); // Go back to original spot
 			out("$"); // JMP
+		} else if (!strcmp(tokens[0].text, "equ")) {
+			out("dd"); // Next two are needed as compare values
+			putVal(&memory, &tokens[1]);
+			out("^a"); // UP, from second to first compare value
+			
+			int oldLocation = memory.position;
+			putVal(&memory, &tokens[2]);
+			out("^a"); // UP, from second to first compare value
+			
+			got(&memory, memory.used + 1); // Goto working space
+			int location = locateObject(&memory, tokens[3].text, LABEL);
+			if (location == -1) {
+				puts("ERR: Label not found");
+				fclose(reader);
+				exit(0);
+			}
+
+			out("!"); // Reset current working space cell
+			putInt(memory.d[location].location);
+			out("^"); // UP
+			got(&memory, oldLocation); // Go back to original spot
+			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
 			
