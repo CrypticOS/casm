@@ -135,7 +135,7 @@ void got(struct Memory *memory, int place) {
 			out(">");
 			memory->position++;
 		}
-	} else {
+	} else if (place < memory->position) {
 		while (place != memory->position) {
 			out("<");
 			memory->position--;
@@ -170,7 +170,7 @@ void gotVar(struct Memory *memory, char *var) {
 // Put/got int or var
 void putVal(struct Memory *memory, struct Token *token) {
 	if (token->type == DIGIT) {
-		got(memory, memory->used + 1); // Goto working space
+		got(memory, memory->used); // Goto working space
 		out("!"); // Reset working space
 		putInt(token->value);
 	} else if (token->type == TEXT) {
@@ -245,8 +245,9 @@ void assemble(char *file) {
 
 		// Instruction Assembler
 		if (tokens[0].type == LABEL) {
-			out("|");
+			//out("|");
 			got(&memory, memory.used);
+			out("|");
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
@@ -275,6 +276,9 @@ void assemble(char *file) {
 			out(".");
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
+
+			// Since there are no %*+ for subtract, we must
+			// do solely -s instead.
 			while (tokens[2].value != 0) {
 				out("-");
 				tokens[2].value--;
@@ -331,17 +335,8 @@ void assemble(char *file) {
 				gotVar(&memory, tokens[1].text);
 				out("v");
 			}
-		} else if (!strcmp(tokens[0].text, "mov")) {
-			gotVar(&memory, tokens[1].text);
-			
-			// Since there are no %*+ for subtract, we must
-			// do solely -s instead.
-			while (tokens[2].value != 0) {
-				out("-");
-				tokens[2].value--;
-			}
 		} else if (!strcmp(tokens[0].text, "run")) {
-			int oldLocation = memory.position;
+			//int oldLocation = memory.position;
 			got(&memory, memory.used); // Goto working space
 
 			// Find run label
@@ -373,7 +368,7 @@ void assemble(char *file) {
 			putInt(memory.d[location].location);
 
 			out("^"); // UP
-			got(&memory, oldLocation); // Go back to original spot
+			//got(&memory, oldLocation); // Go back to original spot
 			out("$"); // JMP
 
 			out("|"); // Put the label for the run command
@@ -381,7 +376,7 @@ void assemble(char *file) {
 			out("a$"); // BACK, JMP
 		}
 
-		putchar('\n');
+		putchar(' ');
 		line++;
 	}
 

@@ -1,11 +1,22 @@
-var a 3
-var b 2
+var ga 3
+var gb 2
+var gd 0
+var gr 0
 top:
-	equ a 0 end
-	sub a 1
-	add b 1
+equ gb 0 end
+set gd ga
+
+atop:
+equ gd 0 aend
+add gr 1
+sub gd 1
+jmp atop
+
+aend:
+sub gb 1
 jmp top
 end:
-add b '0'
-prt b
+
+add gr '0'
+prt gr
 
