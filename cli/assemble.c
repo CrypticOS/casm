@@ -13,7 +13,7 @@ enum Types {
 };
 
 struct Token {
-	char text[20];
+	char text[50];
 	int value;
 	int length;
 	int type;
@@ -21,11 +21,11 @@ struct Token {
 
 struct Memory {
 	struct D {
-		char name[20];
+		char name[50];
 		int type;
 		int location;
 		int length;
-	}d[100];
+	}d[200];
 	int length;
 	int used;
 	int position;
@@ -277,7 +277,6 @@ void assemble(char *file) {
 
 			out(".");
 
-			got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "inl")) {
 			out(tokens[1].text);
 		} else if (!strcmp(tokens[0].text, "sub")) {
@@ -340,7 +339,7 @@ void assemble(char *file) {
 			}
 
 			//got(&memory, oldLocation);
-			got(&memory, memory.used);
+			//got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "run")) {
 			// Find run label
 			int i = 0;
@@ -371,11 +370,12 @@ void assemble(char *file) {
 			putInt(memory.d[location].location);
 
 			out("^"); // UP
-			//got(&memory, oldLocation); // Go back to original spot
+			got(&memory, memory.used); // Go back to original spot
 			out("$"); // JMP
 
 			out("|"); // Put the label for the run command
 		} else if (!strcmp(tokens[0].text, "ret")) {
+			got(&memory, memory.used); // Go back to original spot
 			out("a$"); // BACK, JMP
 		}
 
