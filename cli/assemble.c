@@ -8,7 +8,8 @@
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
 	VAR, ARR,
-	RUN
+	RUN,
+	WORKSPACE
 };
 
 struct Token {
@@ -96,6 +97,15 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 			c++;
 			tokens[token].value = line[c];
 			c += 2; // Skip ' and goto next char
+		} else if (line[c] == '"') {
+			tokens[token].type == STRING;
+			c++; // Skip "
+			while (line[c] != '"') {
+				tokens[token].text[tokens[token].length] = line[c];
+				tokens[token].length++;
+			}
+
+			c++; // Skip "
 		}
 
 		tokens[token].text[tokens[token].length] = '\0';
@@ -225,16 +235,6 @@ void assemble(char *file) {
 	fclose(reader);
 	reader = fopen(file, "r");
 
-	/*
-	Note:
-	Some instructions require a "working space".
-	Ex: jmp, equ
-	They need a cell on the bottom to work with. This either requires:
-	Use top to store value from bototm
-	The working space (memory.used + 1)
-
-	*/
-
 	// Lex regular instructions
 	line = 0;
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
@@ -245,8 +245,6 @@ void assemble(char *file) {
 
 		// Instruction Assembler
 		if (tokens[0].type == LABEL) {
-			//out("|");
-			got(&memory, memory.used);
 			out("|");
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
@@ -258,13 +256,17 @@ void assemble(char *file) {
 
 			// Go to the variable's spot in memory
 			// In order to add value to it.
-			got(&memory, memory.used);
-			memory.used++;
-
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
+			out(">");
+			memory.used++;
+			memory.position++;
 		} else if (!strcmp(tokens[0].text, "got")) {
-			got(&memory, tokens[1].value);
+			if (tokens[1].type == TEXT && !strcmp(tokens[1].text, "WKSP")) {
+				
+			} else if (tokens[1].type == DIGIT) {
+				got(&memory, tokens[1].value);
+			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
 			if (tokens[1].type == DIGIT) {
 				out("!");
@@ -274,6 +276,10 @@ void assemble(char *file) {
 			}
 
 			out(".");
+
+			got(&memory, memory.used);
+		} else if (!strcmp(tokens[0].text, "inl")) {
+			out(tokens[1].text);
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
 
@@ -283,27 +289,24 @@ void assemble(char *file) {
 				out("-");
 				tokens[2].value--;
 			}
+			
 		} else if (!strcmp(tokens[0].text, "add")) {
 			gotVar(&memory, tokens[1].text);
 			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "jmp")) {
-			int oldLocation = memory.position;
-			got(&memory, memory.used); // Goto working space
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
 				fclose(reader);
 				exit(0);
 			}
-
+			
+			got(&memory, memory.used);
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
 			out("^"); // UP
-			got(&memory, oldLocation); // Go back to original spot
 			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "equ")) {
-			int oldLocation = memory.position;
-			
 			out("dd"); // Next two are needed as compare values
 			putVal(&memory, &tokens[1]);
 			out("^a"); // UP, from second to first compare value
@@ -311,7 +314,6 @@ void assemble(char *file) {
 			putVal(&memory, &tokens[2]);
 			out("^a"); // UP, from second to first compare value
 			
-			got(&memory, memory.used); // Goto working space
 			int location = locateObject(&memory, tokens[3].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
@@ -322,9 +324,10 @@ void assemble(char *file) {
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
 			out("^"); // UP
-			got(&memory, oldLocation); // Go back to original spot
+			got(&memory, memory.used);
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
+			//int oldLocation = memory.position;
 			if (tokens[2].type == DIGIT) {
 				gotVar(&memory, tokens[1].text);
 				out("!");
@@ -335,10 +338,10 @@ void assemble(char *file) {
 				gotVar(&memory, tokens[1].text);
 				out("v");
 			}
-		} else if (!strcmp(tokens[0].text, "run")) {
-			//int oldLocation = memory.position;
-			got(&memory, memory.used); // Goto working space
 
+			//got(&memory, oldLocation);
+			got(&memory, memory.used);
+		} else if (!strcmp(tokens[0].text, "run")) {
 			// Find run label
 			int i = 0;
 			for (; i < memory.length; i++) {
@@ -376,7 +379,7 @@ void assemble(char *file) {
 			out("a$"); // BACK, JMP
 		}
 
-		putchar(' ');
+		//putchar(' ');
 		line++;
 	}
 
