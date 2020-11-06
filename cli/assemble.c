@@ -52,16 +52,16 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 	int c = 0;
 	int token = 0;
 	while (line[c] != '\0') {
+		// Skip chars
+		while (line[c] == ' ' || line[c] == '\t') {
+			c++;
+		}
+
 		// Skip comments
 		if (line[c] == ';') {
 			while (line[c] != '\n' || line[c] == '\0') {
 				c++;
 			}
-		}
-		
-		// Skip chars
-		while (line[c] == ' ' || line[c] == '\t') {
-			c++;
 		}
 
 		// Check if this is a nothing line (comments, blank)
@@ -103,9 +103,13 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 			while (line[c] != '"') {
 				tokens[token].text[tokens[token].length] = line[c];
 				tokens[token].length++;
+				c++;
 			}
 
 			c++; // Skip "
+		} else {
+			puts("ERR: Unexpected token.");
+			exit(0);
 		}
 
 		tokens[token].text[tokens[token].length] = '\0';
@@ -246,6 +250,7 @@ void assemble(char *file) {
 		// Instruction Assembler
 		if (tokens[0].type == LABEL) {
 			out("|");
+			//got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
@@ -256,6 +261,8 @@ void assemble(char *file) {
 
 			// Go to the variable's spot in memory
 			// In order to add value to it.
+			//got(&memory, memory.used);
+			//memory.used += 1;
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
 			out(">");
@@ -263,7 +270,7 @@ void assemble(char *file) {
 			memory.position++;
 		} else if (!strcmp(tokens[0].text, "got")) {
 			if (tokens[1].type == TEXT && !strcmp(tokens[1].text, "WKSP")) {
-				
+				got(&memory, memory.used);
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
 			}
@@ -276,7 +283,6 @@ void assemble(char *file) {
 			}
 
 			out(".");
-
 		} else if (!strcmp(tokens[0].text, "inl")) {
 			out(tokens[1].text);
 		} else if (!strcmp(tokens[0].text, "sub")) {
@@ -299,7 +305,7 @@ void assemble(char *file) {
 				fclose(reader);
 				exit(0);
 			}
-			
+
 			got(&memory, memory.used);
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
@@ -320,10 +326,11 @@ void assemble(char *file) {
 				exit(0);
 			}
 
+			got(&memory, memory.used);
+
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
 			out("^"); // UP
-			got(&memory, memory.used);
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
 			//int oldLocation = memory.position;
@@ -350,6 +357,8 @@ void assemble(char *file) {
 				}
 			}
 
+			got(&memory, memory.used); // Go back to original spot
+			
 			out("!"); // Reset current working space cell
 
 			// The label number is stored in length
@@ -370,7 +379,6 @@ void assemble(char *file) {
 			putInt(memory.d[location].location);
 
 			out("^"); // UP
-			got(&memory, memory.used); // Go back to original spot
 			out("$"); // JMP
 
 			out("|"); // Put the label for the run command

@@ -1,6 +1,6 @@
 ; Misc memory management functions for kernel.
-var ga 3
-var gb 10
+var ga 0
+var gb 0
 var gc 0
 var gd 0
 var gr 0
@@ -74,6 +74,9 @@ isAlpha_yes:
 ret
 
 end:
+set ga 50
+set gb 10
 run k.higher
 add gr '0'
 prt gr
+
