@@ -175,7 +175,7 @@ function compile(array) {
 			memoryUsed += length;
 			memoryPlace += length;
 			break;
-		case "out":
+		case "prt":
 			if (tokens[1].type == "string") {
 				// A little bit of optmization.
 				// characters won't be added in twice.
@@ -213,7 +213,7 @@ function compile(array) {
 			);
 
 			break;
-		case "call":
+		case "run":
 			output += "!"; // Reset for writing
 			output += putChar(labels[l] + 1); // copy return location
 			output += "^d"; // Up, right (for when return is called), and goto
@@ -227,7 +227,7 @@ function compile(array) {
 		case "ret":
 			output += "a$"; // Goto previous reg.
 			break;
-		case "mov":
+		case "set":
 			if (tokens[2].type == "text") {
 				if (tokens[2].value == "getchar") {
 					runAt(rawPosition(tokens[1]), ",");
@@ -276,7 +276,7 @@ function compile(array) {
 			output += putChar(labels[checkLabel(tokens[1]).value] + 1);
 			output += "^$";
 			break;
-		case "cmp":
+		case "equ":
 			// Store temp in register 4. Don't go all back since
 			// We will use the previous 3 registers
 			output += "dd";
