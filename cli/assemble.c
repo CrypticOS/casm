@@ -8,7 +8,7 @@
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
 	VAR, ARR,
-	RUN,
+	RUN, DEFINE,
 	WORKSPACE
 };
 
@@ -47,8 +47,21 @@ int isDigit(char c) {
 	}
 }
 
+// Locate var, arr, lbl, from objects in memory
+// from type
+int locateObject(struct Memory *memory, char *name, int type) {
+	for (int i = 0; i < memory->length; i++) {
+		// Make sure to check type first. Name can sometimes be unitialized.
+		if (memory->d[i].type == type && !strcmp(memory->d[i].name, name)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 // Lex single line, then quit
-int lex(struct Token tokens[MAX_TOK], char *line) {
+int lex(struct Memory *memory, struct Token tokens[MAX_TOK], char *line) {
 	int c = 0;
 	int token = 0;
 	while (line[c] != '\0') {
@@ -107,11 +120,9 @@ int lex(struct Token tokens[MAX_TOK], char *line) {
 			}
 
 			c++; // Skip "
-		} else {
-			puts("ERR: Unexpected token.");
-			exit(0);
 		}
 
+		// Always null terminate string
 		tokens[token].text[tokens[token].length] = '\0';
 		token++;
 	}
@@ -157,19 +168,6 @@ void got(struct Memory *memory, int place) {
 	}
 }
 
-// Locate var, arr, lbl, from objects in memory
-// from type
-int locateObject(struct Memory *memory, char *name, int type) {
-	for (int i = 0; i < memory->length; i++) {
-		// Make sure to check type first. Name can sometimes be unitialized.
-		if (memory->d[i].type == type && !strcmp(memory->d[i].name, name)) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-
 // Goto a variable location.
 void gotVar(struct Memory *memory, char *var) {
 	int location = locateObject(memory, var, VAR);
@@ -184,7 +182,7 @@ void gotVar(struct Memory *memory, char *var) {
 // Put/got int or var
 void putVal(struct Memory *memory, struct Token *token) {
 	if (token->type == DIGIT) {
-		got(memory, memory->used); // Goto working space
+		got(memory, memory->used);
 		out("!"); // Reset working space
 		putInt(token->value);
 	} else if (token->type == TEXT) {
@@ -212,8 +210,9 @@ void assemble(char *file) {
 		exit(0);
 	}
 
+	// Lex through the labels/runs first.
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
-		int length = lex(tokens, buffer);
+		int length = lex(&memory, tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
@@ -242,15 +241,31 @@ void assemble(char *file) {
 	// Lex regular instructions
 	line = 0;
 	while (fgets(buffer, MAX_LINE, reader) != NULL) {
-		int length = lex(tokens, buffer);
+		int length = lex(&memory, tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
 
+		// Try to math define with tokens
+		for (int i = 0; i < length; i++) {
+			if (tokens[i].type == TEXT) {
+				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
+				if (tryDef != -1) {
+					tokens[i].type = DIGIT;
+					tokens[i].value = memory.d[tryDef].location;
+				}
+			}
+		}
+
 		// Instruction Assembler
-		if (tokens[0].type == LABEL) {
+		if (!strcmp(tokens[0].text, "def")) {
+			strcpy(memory.d[memory.length].name, tokens[1].text);
+			memory.d[memory.length].location = tokens[2].value;
+			memory.d[memory.length].type = DEFINE;
+			memory.length++;
+		} else if (tokens[0].type == LABEL) {
+			got(&memory, memory.used);
 			out("|");
-			//got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "var")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
@@ -261,18 +276,34 @@ void assemble(char *file) {
 
 			// Go to the variable's spot in memory
 			// In order to add value to it.
-			//got(&memory, memory.used);
-			//memory.used += 1;
+			got(&memory, memory.used);
+			memory.used += 1;
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
-			out(">");
-			memory.used++;
-			memory.position++;
+			// out(">");
+			// memory.used++;
+			// memory.position++;
+		} else if (!strcmp(tokens[0].text, "arr")) {
+			// Add variable into object list
+			strcpy(memory.d[memory.length].name, tokens[1].text);
+			memory.d[memory.length].location = memory.used;
+			memory.d[memory.length].length = tokens[2].value; // vars are 1 int wide
+			memory.d[memory.length].type = VAR;
+			memory.length++;
+
+			// Go to the variable's spot in memory
+			// In order to add value to it.
+			memory.used += tokens[2].value;
 		} else if (!strcmp(tokens[0].text, "got")) {
 			if (tokens[1].type == TEXT && !strcmp(tokens[1].text, "WKSP")) {
 				got(&memory, memory.used);
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
+			}
+		} else if (!strcmp(tokens[0].text, "str")) {
+			for (int c = 0; tokens[1].text[c] != '\0'; c++) {
+				memory.position++;
+				out(">");
 			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
 			if (tokens[1].type == DIGIT) {

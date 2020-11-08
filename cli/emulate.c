@@ -92,6 +92,7 @@ int run(char *input) {
 
 	free(membottom);
 	free(memtop);
+	free(labels);
 
 	putchar('\n');
 }

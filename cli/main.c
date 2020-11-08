@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	
 		run(input);
 		
-		//free(input);
+		free(input);
 	} else if (argv[1][0] == 'a') {
 		assemble(argv[2]);
 	}
