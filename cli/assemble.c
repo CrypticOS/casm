@@ -111,7 +111,7 @@ int lex(struct Memory *memory, struct Token tokens[MAX_TOK], char *line) {
 			tokens[token].value = line[c];
 			c += 2; // Skip ' and goto next char
 		} else if (line[c] == '"') {
-			tokens[token].type == STRING;
+			tokens[token].type = STRING;
 			c++; // Skip "
 			while (line[c] != '"') {
 				tokens[token].text[tokens[token].length] = line[c];
@@ -307,13 +307,31 @@ void assemble(char *file) {
 			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
 			if (tokens[1].type == DIGIT) {
+				got(&memory, memory.used);
 				out("!");
 				putInt(tokens[1].value);
+				out(".");
 			} else if (tokens[1].type == TEXT) {
 				gotVar(&memory, tokens[1].text);
-			}
+				out(".");
+			} else if (tokens[1].type == STRING) {
+				for (int i = 0; tokens[1].text[i] != '\0'; i++) {
+					if (i != 0) {
+						if (tokens[1].text[i - 1] < tokens[i].text[i]) {
+							putInt(tokens[1].text[i] - tokens[1].text[i - 1]);
+							out(".");
+							continue;
+						} else if (tokens[1].text[i - 1] == tokens[1].text[i]) {
+							out(".");
+							continue;
+						}
+					}
 
-			out(".");
+					out("!");
+					putInt(tokens[1].text[i]);
+					out(".");
+				}
+			}
 		} else if (!strcmp(tokens[0].text, "inl")) {
 			out(tokens[1].text);
 		} else if (!strcmp(tokens[0].text, "sub")) {
