@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 		
 		free(input);
 	} else if (argv[1][0] == 'a') {
-		assemble(argv[3]);
+		assemble(argv[2]);
 	}
 	
     return 0;
