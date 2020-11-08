@@ -8,7 +8,14 @@
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
-		puts("No input.");
+		puts(
+			"CrypticASM (CASM) Assembler\n" \
+			"Usage:\n" \
+			"\tcasm a <code.casm>\tAssemble a file\n" \
+			"\tcasm r <output.casm\tRun an output file\n" \
+			"Examples:\n" \
+			"\tcasm a foo.casm > a.out && casm r a.out"
+		);
 		return 0;
 	}
 	
@@ -28,7 +35,7 @@ int main(int argc, char *argv[]) {
 		
 		free(input);
 	} else if (argv[1][0] == 'a') {
-		assemble(argv[2]);
+		assemble(argv[3]);
 	}
 	
     return 0;
