@@ -1,0 +1,12 @@
+filetype: casm
+
+detect:
+    filename: "\\.casm$"
+
+rules:
+    - statement: "\\b(jmp|got|ret|inl|out|ptr|include|cmp|equ|set|mov|var|arr|add|sub|call|run|prt|str|def|inc)\\b"
+    - identifier: "[a-zA-Z_.]+:"
+    - constant.number: "\\b[0-9]+\\b"
+    - constant.string: "\'(.)*\'"
+    - constant.string: "\"(.|[^\"])*\""
+    - comment: ";.*"
