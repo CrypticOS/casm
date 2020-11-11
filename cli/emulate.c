@@ -12,7 +12,7 @@ void syscall() {
 }
 
 // 16 bit emulator
-int run(char *input) {
+int run(char *input, char *keys) {
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
@@ -34,12 +34,12 @@ int run(char *input) {
 		//printf("##%d - %d\n", c, bottomp);
 		switch (input[c]) {
 		case ',':
-			if (input[get] == '\0') {
+			if (keys[get] == '\0') {
 				puts("Read outside input, stopping\n");
 				return -1;
 			}
 
-			membottom[bottomp] = input[get];
+			membottom[bottomp] = keys[get];
 			get++;
 			break;
 		case '!':

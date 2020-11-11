@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_TOK 10
 #define MAX_LINE 200
@@ -30,6 +31,49 @@ struct Memory {
 	int used;
 	int position;
 };
+
+// For recursive file reader
+char buffer[MAX_LINE];
+FILE *readerStack[3];
+int readerPoint = 0;
+int line = 0;
+
+void fileKill() {
+	while (readerPoint != 0) {
+		fclose(readerStack[readerPoint]);
+		readerPoint--;
+	}
+}
+
+// Check end of current file
+bool fileNext() {
+	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
+		fclose(readerStack[readerPoint]);
+		if (line == 0) {
+			puts("ERR: Skipping bad file");
+			readerPoint--;
+		}
+
+		if (readerPoint == 0) {
+			return 0; // End of read
+		} else {
+			readerPoint--;
+			fileNext(); // Recursively call to skip include
+		}
+	}
+
+	return 1;
+}
+
+void fileOpen(char *file) {
+	line++; // To skip to line after inc
+	readerPoint++;
+	readerStack[readerPoint] = fopen(file, "r");
+	if (readerStack[readerPoint] == NULL) {
+		puts("ERR: Skipping bad file included");
+	}
+}
+
 
 int isAlpha(char c) {
 	if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c == '.' || c == '_') {
@@ -197,21 +241,18 @@ void assemble(char *file) {
 	memory.position = 0;
 	struct Token tokens[MAX_TOK];
 
-	FILE *reader;
-	char buffer[MAX_LINE];
-	
-	// Lex all labels first.
 	int labelsFound = 1;
-	int line = 0;
-	reader = fopen(file, "r");
-	if (reader == NULL) {
-		puts("ERR: Bad file");
-		fclose(reader);
-		exit(0);
-	}
+	bool run = 1; // For recursive while loop
 
+	readerStack[readerPoint] = fopen(file, "r");
+	
 	// Lex through the labels/runs first.
-	while (fgets(buffer, MAX_LINE, reader) != NULL) {
+	while (1) {
+		run = fileNext();
+		if (!run) {
+			break;
+		}
+		
 		int length = lex(&memory, tokens, buffer);
 		if (length == 0) {
 			continue;
@@ -229,24 +270,32 @@ void assemble(char *file) {
 			memory.d[memory.length].type = RUN;
 			memory.length++;
 			labelsFound++;
+		} else if (!strcmp(tokens[0].text, "inc")) {
+			fileOpen(tokens[1].text);
+			continue;
 		}
-
+		
 		line++;
 	}
 
 	// Close and reopen to pointer
-	fclose(reader);
-	reader = fopen(file, "r");
+	readerPoint = 0;
+	readerStack[readerPoint] = fopen(file, "r");
 
 	// Lex regular instructions
 	line = 0;
-	while (fgets(buffer, MAX_LINE, reader) != NULL) {
+	while (1) {
+		run = fileNext();
+		if (!run) {
+			break;
+		}
+		
 		int length = lex(&memory, tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
 
-		// Try to math define with tokens
+		// Try to match define with tokens
 		for (int i = 0; i < length; i++) {
 			if (tokens[i].type == TEXT) {
 				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
@@ -351,7 +400,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fclose(reader);
+				fileKill();
 				exit(0);
 			}
 
@@ -371,7 +420,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[3].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fclose(reader);
+				fileKill();
 				exit(0);
 			}
 
@@ -421,7 +470,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fclose(reader);
+				fileKill();
 				exit(0);
 			}
 
@@ -434,11 +483,13 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "ret")) {
 			got(&memory, memory.used); // Go back to original spot
 			out("a$"); // BACK, JMP
+		} else if (!strcmp(tokens[0].text, "inc")) {
+			fileOpen(tokens[1].text);
+			continue;
 		}
 
-		//putchar(' ');
 		line++;
 	}
 
-	fclose(reader);
+	fileKill();
 }

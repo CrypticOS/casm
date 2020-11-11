@@ -7,7 +7,7 @@
 #define MAX_INPUT 1000
 
 int main(int argc, char *argv[]) {
-	if (argc != 3) {
+	if (argc < 3) {
 		puts(
 			"CrypticASM (CASM) Assembler\n" \
 			"Usage:\n" \
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 		fgets(input, MAX_INPUT, reader);
 		fclose(reader);
 	
-		run(input);
+		run(input, argv[3]);
 		
 		free(input);
 	} else if (argv[1][0] == 'a') {

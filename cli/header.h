@@ -1,2 +1,2 @@
-int run(char *input);
+int run(char *input, char *keys);
 void assemble(char *file);

@@ -1,2 +1,2 @@
-def a 'A'
-prt a
+lbl:
+var a 'A'
