@@ -20,6 +20,9 @@ struct Token {
 	int type;
 };
 
+// Labels, calls, variables, are all
+// stored as memory objects in the same
+// structure.
 struct Memory {
 	struct D {
 		char name[50];
@@ -38,6 +41,7 @@ FILE *readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
+// free all file readers
 void fileKill() {
 	while (readerPoint != 0) {
 		fclose(readerStack[readerPoint]);
@@ -65,6 +69,7 @@ bool fileNext() {
 	return 1;
 }
 
+// Pause current file reading, open new one
 void fileOpen(char *file) {
 	line++; // To skip to line after inc
 	readerPoint++;
