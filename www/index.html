@@ -6,11 +6,12 @@
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
-		<select id="programSelector" class="top">
-			<option>std.casm</option>
+		<select id="programSelector" class="top" onchange="selectProgram(this.value)">
+			<option>demo.casm</option>
+			<option>hello.casm</option>
 		</select>
-		<input id="input" class="top" value=".+0">
-		<textarea id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
+		<input id="input" class="top" placeholder="Input here...">
+		<textarea id="code" spellcheck="false" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
 		<textarea id="output"></textarea>
 		<button onclick="compileAsm()">Compile</button>
 		<button onclick="compileRun()">Run & Compile</button>
@@ -50,9 +51,24 @@
 		execute(mem, brainflake, speedSelector.value);
 	}
 
-	document.getElementById("programSelector").onchange = function() {
-		code.value = demos[this.value];
+	var demos = {
+		"demo.casm": 
+`var a '0'
+top:
+prt a
+add a 1
+equ a '9' end
+jmp top
+end:`,
+		"hello.casm": 
+`prt "Hello, World"`
 	}
+
+	function selectProgram(e) {
+		code.value = demos[e];
+	}
+
+	selectProgram("demo.casm");
 
 	</script>
 </html>

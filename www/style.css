@@ -7,11 +7,14 @@ html, body {
 #code, #output {
 	width: 50%;
 	display: block;
-	background: grey;
+	background: #2d2d2d;
+	color: white;
 	height: 600px;
 	outline: none;
 	box-sizing: border-box;
 	resize: none;
+	font-size: 17px;
+	height: calc(100% - 70px);
 }
 
 #code {
