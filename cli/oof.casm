@@ -1,3 +1,0 @@
-inc "foo.casm"
-prt a
-jmp lbl

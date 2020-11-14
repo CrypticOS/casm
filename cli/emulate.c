@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_INPUT 10000
-#define MAX_TOP 10000
+#define MAX_INPUT 1000
+#define MAX_TOP 100
 #define MAX_BOTTOM 10000
-#define MAX_LABELS 10000
+#define MAX_LABELS 1000
 
 // Perform emulator system call
 void syscall() {
@@ -12,7 +12,7 @@ void syscall() {
 }
 
 // 16 bit emulator
-int run(char *input, char *keys) {
+void run(char *input, char *keys) {
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
@@ -31,12 +31,15 @@ int run(char *input, char *keys) {
 
 	int get = 0;
 	for (int c = 0; input[c] != '\0'; c++) {
-		//printf("##%d - %d\n", c, bottomp);
+		//printf("_%d - %d\n", c, bottomp);
 		switch (input[c]) {
 		case ',':
 			if (keys[get] == '\0') {
 				puts("Read outside input, stopping\n");
-				return -1;
+				free(memtop);
+				free(membottom);
+				free(labels);
+				return;
 			}
 
 			membottom[bottomp] = keys[get];

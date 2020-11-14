@@ -76,7 +76,7 @@ void fileOpen(char *file) {
 
 
 int isAlpha(char c) {
-	if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c == '.' || c == '_') {
+	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '.' || c == '_')) {
 		return 1;
 	} else {
 		return 0;
@@ -105,7 +105,7 @@ int locateObject(struct Memory *memory, char *name, int type) {
 }
 
 // Lex single line, then quit
-int lex(struct Memory *memory, struct Token tokens[MAX_TOK], char *line) {
+int lex(struct Token *tokens, char *line) {
 	int c = 0;
 	int token = 0;
 	while (line[c] != '\0') {
@@ -253,7 +253,7 @@ void assemble(char *file) {
 			break;
 		}
 		
-		int length = lex(&memory, tokens, buffer);
+		int length = lex(tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
@@ -290,7 +290,7 @@ void assemble(char *file) {
 			break;
 		}
 		
-		int length = lex(&memory, tokens, buffer);
+		int length = lex(tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
@@ -344,8 +344,12 @@ void assemble(char *file) {
 			// In order to add value to it.
 			memory.used += tokens[2].value;
 		} else if (!strcmp(tokens[0].text, "got")) {
-			if (tokens[1].type == TEXT && !strcmp(tokens[1].text, "WKSP")) {
-				got(&memory, memory.used);
+			if (tokens[1].type == TEXT) {
+				if (!strcmp(tokens[1].text, "WKSP")) {
+					got(&memory, memory.used);
+				} else {
+					gotVar(&memory, tokens[1].text);
+				}
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
 			}
