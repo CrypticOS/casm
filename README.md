@@ -15,7 +15,7 @@ prt "Hello, World."
 jmp top
 ```
 
-``
+```
 ; In order to compare two values:
 var  a 'A'
 equ a 'B' mylbl ; this will not jump
@@ -26,4 +26,4 @@ sub a 1
 add a 1
 add a '0'
 set a 'Z'
-``
+```
