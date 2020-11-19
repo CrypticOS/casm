@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "options.h"
 
 #define MAX_INPUT 1000
 #define MAX_TOP 100
@@ -13,6 +14,7 @@ void syscall() {
 
 // 16 bit emulator
 void run(char *input, char *keys) {
+	putchar(13); // Carriage return
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
@@ -34,16 +36,23 @@ void run(char *input, char *keys) {
 		//printf("_%d - %d\n", c, bottomp);
 		switch (input[c]) {
 		case ',':
-			if (keys[get] == '\0') {
-				puts("Read outside input, stopping\n");
-				free(memtop);
-				free(membottom);
-				free(labels);
-				return;
-			}
+			if (EMULATOR_USE_KEYS) {
+				// Switch between regular and raw input modes.
+				system("/bin/stty raw");
+				membottom[bottomp] = getchar();
+				system("/bin/stty cooked");
+			} else {
+				if (keys[get] == '\0') {
+					puts("Read outside input, stopping\n");
+					free(memtop);
+					free(membottom);
+					free(labels);
+					return;
+				}
 
-			membottom[bottomp] = keys[get];
-			get++;
+				membottom[bottomp] = keys[get];
+				get++;
+			}
 			break;
 		case '!':
 			membottom[bottomp] = 0;

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "options.h"
 
 #define MAX_TOK 10
 #define MAX_LINE 200
@@ -18,6 +19,7 @@ struct Token {
 	int value;
 	int length;
 	int type;
+	bool addressOf;
 };
 
 // Labels, calls, variables, are all
@@ -131,6 +133,13 @@ int lex(struct Token *tokens, char *line) {
 			return token;
 		}
 
+		tokens[token].addressOf = 0;
+
+		if (line[c] == '&') {
+			tokens[token].addressOf = 1;
+			c++;
+		}
+
 		tokens[token].length = 0;
 		tokens[token].type = 0;
 		tokens[token].value = 0;
@@ -231,11 +240,21 @@ void gotVar(struct Memory *memory, char *var) {
 // Put/got int or var
 void putVal(struct Memory *memory, struct Token *token) {
 	if (token->type == DIGIT) {
-		got(memory, memory->used);
-		out("!"); // Reset working space
+		out("!");
 		putInt(token->value);
 	} else if (token->type == TEXT) {
-		gotVar(memory, token->text);
+		if (token->addressOf) {
+			int location = locateObject(memory, token->text, VAR);
+			if (location == -1) {
+				puts("ERR: Bad variable");
+				return;
+			}
+
+			out("!");
+			putInt(memory->used - memory->d[location].location);
+		} else {
+			gotVar(memory, token->text);
+		}
 	}
 }
 
@@ -250,6 +269,10 @@ void assemble(char *file) {
 	bool run = 1; // For recursive while loop
 
 	readerStack[readerPoint] = fopen(file, "r");
+	if (readerStack[readerPoint] == NULL) {
+		puts("ERR: File not found.");
+		exit(1);
+	}
 	
 	// Lex through the labels/runs first.
 	while (1) {
@@ -345,9 +368,17 @@ void assemble(char *file) {
 			memory.d[memory.length].type = VAR;
 			memory.length++;
 
-			// Go to the variable's spot in memory
-			// In order to add value to it.
+			// Add up the memory used.
 			memory.used += tokens[2].value;
+
+			// Initialize the length of the array if wanted
+			if (INITIALIZE_ARRAYS) {
+				while (tokens[2].value != 0) {
+					out("!>");
+					memory.position++;
+					tokens[2].value--;
+				}
+			}
 		} else if (!strcmp(tokens[0].text, "got")) {
 			if (tokens[1].type == TEXT) {
 				if (!strcmp(tokens[1].text, "WKSP")) {
@@ -361,18 +392,13 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "str")) {
 			for (int c = 0; tokens[1].text[c] != '\0'; c++) {
 				memory.position++;
+				putInt(tokens[1].text[c]);
 				out(">");
 			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
-			if (tokens[1].type == DIGIT) {
-				got(&memory, memory.used);
-				out("!");
-				putInt(tokens[1].value);
-				out(".");
-			} else if (tokens[1].type == TEXT) {
-				gotVar(&memory, tokens[1].text);
-				out(".");
-			} else if (tokens[1].type == STRING) {
+			if (tokens[1].type == STRING) {
+				// The string printing algorithm is enhanced and
+				// optimized.
 				for (int i = 0; tokens[1].text[i] != '\0'; i++) {
 					if (i != 0) {
 						if (tokens[1].text[i - 1] < tokens[i].text[i]) {
@@ -389,6 +415,9 @@ void assemble(char *file) {
 					putInt(tokens[1].text[i]);
 					out(".");
 				}
+			} else {
+				putVal(&memory, &tokens[1]);
+				out(".");
 			}
 		} else if (!strcmp(tokens[0].text, "inl")) {
 			out(tokens[1].text);
@@ -420,10 +449,12 @@ void assemble(char *file) {
 			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "equ")) {
 			out("dd"); // Next two are needed as compare values
+			got(&memory, memory.used);
 			putVal(&memory, &tokens[1]);
 			out("^a"); // UP, from second to first compare value
 			
 			putVal(&memory, &tokens[2]);
+			got(&memory, memory.used);
 			out("^a"); // UP, from second to first compare value
 			
 			int location = locateObject(&memory, tokens[3].text, LABEL);
@@ -441,15 +472,14 @@ void assemble(char *file) {
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
 			//int oldLocation = memory.position;
-			if (tokens[2].type == DIGIT) {
-				gotVar(&memory, tokens[1].text);
-				out("!");
-				putInt(tokens[2].value);
-			} else if (tokens[2].type == TEXT) {
+			if (tokens[2].type == TEXT) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
 				gotVar(&memory, tokens[1].text);
 				out("v");
+			} else {
+				gotVar(&memory, tokens[1].text);
+				putVal(&memory, &tokens[2]);
 			}
 
 			//got(&memory, oldLocation);
@@ -457,11 +487,13 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "run")) {
 			// Find run label
 			int i = 0;
-			for (; i < memory.length; i++) {
+			while (i < memory.length) {
 				// Check type and line in source code.
 				if (memory.d[i].type == RUN && memory.d[i].location == line) {
 					break;
 				}
+
+				i++;
 			}
 
 			got(&memory, memory.used); // Go back to original spot
@@ -496,7 +528,7 @@ void assemble(char *file) {
 			fileOpen(tokens[1].text);
 			continue;
 		}
-
+		
 		line++;
 	}
 

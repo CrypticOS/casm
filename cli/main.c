@@ -22,9 +22,8 @@ int main(int argc, char *argv[]) {
 	if (argv[1][0] == 'r') {
 		FILE *reader = fopen(argv[2], "r");
 		if (reader == NULL) {
-			puts("Bad file.");
-			fclose(reader);
-			return 0;
+			puts("ERR: File not found.");
+			return 1;
 		}
 		
 		char *input = malloc(sizeof(char) * MAX_INPUT);
