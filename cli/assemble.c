@@ -237,8 +237,8 @@ void gotVar(struct Memory *memory, char *var) {
 	got(memory, memory->d[location].location);
 }
 
-// Put/got int or var
-void putVal(struct Memory *memory, struct Token *token, bool reset) {
+// Put/got a token, ready for "^" to be used.
+void putTok(struct Memory *memory, struct Token *token, bool reset) {
 	if (token->type == DIGIT) {
 		if (reset) {
 			got(memory, memory->used);
@@ -420,7 +420,7 @@ void assemble(char *file) {
 					out(".");
 				}
 			} else {
-				putVal(&memory, &tokens[1], 1);
+				putTok(&memory, &tokens[1], 1);
 				out(".");
 			}
 		} else if (!strcmp(tokens[0].text, "inl")) {
@@ -454,10 +454,10 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "equ")) {
 			out("dd"); // Next two are needed as compare values
 			//got(&memory, memory.used);
-			putVal(&memory, &tokens[1], 1);
+			putTok(&memory, &tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
 			
-			putVal(&memory, &tokens[2], 1);
+			putTok(&memory, &tokens[2], 1);
 			//got(&memory, memory.used);
 			out("^a"); // UP, from second to first compare value
 			
@@ -483,7 +483,7 @@ void assemble(char *file) {
 				out("v");
 			} else {
 				gotVar(&memory, tokens[1].text);
-				putVal(&memory, &tokens[2], 0);
+				putTok(&memory, &tokens[2], 0);
 			}
 
 			//got(&memory, oldLocation);
