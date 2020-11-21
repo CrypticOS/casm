@@ -238,8 +238,12 @@ void gotVar(struct Memory *memory, char *var) {
 }
 
 // Put/got int or var
-void putVal(struct Memory *memory, struct Token *token) {
+void putVal(struct Memory *memory, struct Token *token, bool reset) {
 	if (token->type == DIGIT) {
+		if (reset) {
+			got(memory, memory->used);
+		}
+		
 		out("!");
 		putInt(token->value);
 	} else if (token->type == TEXT) {
@@ -416,7 +420,7 @@ void assemble(char *file) {
 					out(".");
 				}
 			} else {
-				putVal(&memory, &tokens[1]);
+				putVal(&memory, &tokens[1], 1);
 				out(".");
 			}
 		} else if (!strcmp(tokens[0].text, "inl")) {
@@ -449,12 +453,12 @@ void assemble(char *file) {
 			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "equ")) {
 			out("dd"); // Next two are needed as compare values
-			got(&memory, memory.used);
-			putVal(&memory, &tokens[1]);
+			//got(&memory, memory.used);
+			putVal(&memory, &tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
 			
-			putVal(&memory, &tokens[2]);
-			got(&memory, memory.used);
+			putVal(&memory, &tokens[2], 1);
+			//got(&memory, memory.used);
 			out("^a"); // UP, from second to first compare value
 			
 			int location = locateObject(&memory, tokens[3].text, LABEL);
@@ -479,7 +483,7 @@ void assemble(char *file) {
 				out("v");
 			} else {
 				gotVar(&memory, tokens[1].text);
-				putVal(&memory, &tokens[2]);
+				putVal(&memory, &tokens[2], 0);
 			}
 
 			//got(&memory, oldLocation);
