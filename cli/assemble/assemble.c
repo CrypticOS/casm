@@ -2,40 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "options.h"
-
-#define MAX_TOK 10
-#define MAX_LINE 200
-
-enum Types {
-	TEXT, DIGIT, STRING, LABEL,
-	VAR, ARR,
-	RUN, DEFINE,
-	WORKSPACE
-};
-
-struct Token {
-	char text[50];
-	int value;
-	int length;
-	int type;
-	bool addressOf;
-};
-
-// Labels, calls, variables, are all
-// stored as memory objects in the same
-// structure.
-struct Memory {
-	struct D {
-		char name[50];
-		int type;
-		int location;
-		int length;
-	}d[200];
-	int length;
-	int used;
-	int position;
-};
+#include "../options.h"
+#include "object.h"
+#include "lex.h"
 
 // For recursive file reader
 char buffer[MAX_LINE];
@@ -81,111 +50,9 @@ void fileOpen(char *file) {
 	}
 }
 
-
-int isAlpha(char c) {
-	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '.' || c == '_')) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
-int isDigit(char c) {
-	if (c >= '0' && c <= '9') {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
-// Locate var, arr, lbl, from objects in memory
-// from type
-int locateObject(struct Memory *memory, char *name, int type) {
-	for (int i = 0; i < memory->length; i++) {
-		// Make sure to check type first. Name can sometimes be unitialized.
-		if (memory->d[i].type == type && !strcmp(memory->d[i].name, name)) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-// Lex single line, then quit
-int lex(struct Token *tokens, char *line) {
-	int c = 0;
-	int token = 0;
-	while (line[c] != '\0') {
-		// Skip chars
-		while (line[c] == ' ' || line[c] == '\t') {
-			c++;
-		}
-
-		// Skip comments
-		if (line[c] == ';') {
-			while (line[c] != '\n' || line[c] == '\0') {
-				c++;
-			}
-		}
-
-		// Check if this is a nothing line (comments, blank)
-		if (line[c] == '\n' || line[c] == '\0') {
-			return token;
-		}
-
-		tokens[token].addressOf = 0;
-
-		if (line[c] == '&') {
-			tokens[token].addressOf = 1;
-			c++;
-		}
-
-		tokens[token].length = 0;
-		tokens[token].type = 0;
-		tokens[token].value = 0;
-		if (isAlpha(line[c])) {
-			tokens[token].type = TEXT;
-			while (isAlpha(line[c])) {
-				tokens[token].text[tokens[token].length] = line[c];
-				tokens[token].length++;
-
-				c++;
-			}
-
-			if (line[c] == ':') {
-				tokens[token].type = LABEL;
-				c++;
-			}
-		} else if (isDigit(line[c])) {
-			tokens[token].type = DIGIT;
-			while (isDigit(line[c])) {
-				tokens[token].value *= 10;
-				tokens[token].value += (line[c] - '0');
-				c++;
-			}
-		} else if (line[c] == '\'') {
-			tokens[token].type = DIGIT;
-			c++;
-			tokens[token].value = line[c];
-			c += 2; // Skip ' and goto next char
-		} else if (line[c] == '"') {
-			tokens[token].type = STRING;
-			c++; // Skip "
-			while (line[c] != '"') {
-				tokens[token].text[tokens[token].length] = line[c];
-				tokens[token].length++;
-				c++;
-			}
-
-			c++; // Skip "
-		}
-
-		// Always null terminate string
-		tokens[token].text[tokens[token].length] = '\0';
-		token++;
-	}
-
-	return token;
+void killAll(struct Memory *memory) {
+	free(memory->d);
+	fileKill();
 }
 
 // Main instruction out function
@@ -267,6 +134,10 @@ void assemble(char *file) {
 	memory.length = 0;
 	memory.used = 0;
 	memory.position = 0;
+
+	// Use ~32k ram for memory objects
+	memory.d = malloc(sizeof(struct MemObject) * 500);
+	
 	struct Token tokens[MAX_TOK];
 
 	int labelsFound = 1;
@@ -442,7 +313,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fileKill();
+				fileKill(&memory);
 				exit(0);
 			}
 
@@ -464,7 +335,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[3].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fileKill();
+				fileKill(&memory);
 				exit(0);
 			}
 
@@ -515,7 +386,7 @@ void assemble(char *file) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				puts("ERR: Label not found");
-				fileKill();
+				killAll(&memory);
 				exit(0);
 			}
 
@@ -536,5 +407,5 @@ void assemble(char *file) {
 		line++;
 	}
 
-	fileKill();
+	killAll(&memory);
 }

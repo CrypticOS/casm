@@ -1,4 +1,4 @@
-tcc emulate.c main.c assemble.c -o casm
+tcc emulate.c assemble/lex.c assemble/assemble.c main.c -o casm
 #./casm a ~/Documents/crypticos/kernel/kernel.casm > foo.o
 ./casm a foo.casm > foo.o
 cat foo.o
