@@ -403,9 +403,9 @@ void assemble(char *file) {
 			if (tokens[1].type == STRING) {
 				// The string printing algorithm is enhanced and
 				// optimized.
-				for (int i = 0; tokens[1].text[i] != '\0'; i++) {
+				for (size_t i = 0; tokens[1].text[i] != '\0'; i++) {
 					if (i != 0) {
-						if (tokens[1].text[i - 1] < tokens[i].text[i]) {
+						if (tokens[1].text[i - 1] < tokens[1].text[i]) {
 							putInt(tokens[1].text[i] - tokens[1].text[i - 1]);
 							out(".");
 							continue;
