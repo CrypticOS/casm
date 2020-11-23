@@ -4,7 +4,12 @@ detect:
     filename: "\\.casm$"
 
 rules:
-    - statement: "\\b(jmp|got|ret|inl|out|ptr|include|cmp|equ|set|mov|var|arr|add|sub|call|run|prt|str|def|inc)\\b"
+    - statement: "\\b(jmp|got|ret|inl|ptr|equ|set|var|arr|add|sub|run|str|def|inc)\\b"
+    
+    # Kernel, std stuff
+    - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high)\\b"
+    - identifier: "\\b(ga|gb|gc|gd|gr)\\b"
+    
     - identifier: "[a-zA-Z_.]+:"
     - constant.number: "\\b[0-9]+\\b"
     - constant.string: "\'(.)*\'"
