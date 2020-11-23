@@ -4,7 +4,7 @@ detect:
     filename: "\\.casm$"
 
 rules:
-    - statement: "\\b(jmp|got|ret|inl|ptr|equ|set|var|arr|add|sub|run|str|def|inc)\\b"
+    - statement: "\\b(jmp|got|ret|inl|ptr|equ|set|var|arr|add|sub|run|str|def|inc|prt)\\b"
     
     # Kernel, std stuff
     - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high)\\b"
