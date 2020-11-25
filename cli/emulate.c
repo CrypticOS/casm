@@ -31,9 +31,8 @@ void run(char *input, char *keys) {
 		}
 	}
 
-	int get = 0;
+	size_t get = 0;
 	for (int c = 0; input[c] != '\0'; c++) {
-		//printf("_%d - %d\n", c, bottomp);
 		switch (input[c]) {
 		case ',':
 			if (EMULATOR_USE_KEYS) {
@@ -53,6 +52,7 @@ void run(char *input, char *keys) {
 				membottom[bottomp] = keys[get];
 				get++;
 			}
+			
 			break;
 		case '!':
 			membottom[bottomp] = 0;
@@ -98,6 +98,11 @@ void run(char *input, char *keys) {
 				c = labels[memtop[topp] - 1];
 			}
 
+			break;
+
+		// Debug char
+		case '#':
+			printf("[%d - %d]\n", c, bottomp);
 			break;
 		}
 	}

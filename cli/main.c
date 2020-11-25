@@ -4,7 +4,7 @@
 #include <string.h>
 #include "header.h"
 
-#define MAX_INPUT 1000
+#define MAX_INPUT 20000
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {

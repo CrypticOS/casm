@@ -47,12 +47,12 @@ int lex(struct Token *tokens, char *line) {
 			}
 		}
 
+		tokens[token].addressOf = 0;
+
 		// Check if this is a nothing line (comments, blank)
 		if (line[c] == '\n' || line[c] == '\0') {
 			return token;
 		}
-
-		tokens[token].addressOf = 0;
 
 		if (line[c] == '&') {
 			tokens[token].addressOf = 1;
@@ -103,6 +103,6 @@ int lex(struct Token *tokens, char *line) {
 		tokens[token].text[tokens[token].length] = '\0';
 		token++;
 	}
-
+	
 	return token;
 }
