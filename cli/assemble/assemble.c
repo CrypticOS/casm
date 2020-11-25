@@ -22,6 +22,7 @@ void fileKill() {
 
 // Check end of current file
 bool fileNext() {
+	fileNext_top:
 	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
 		fclose(readerStack[readerPoint]);
 		if (line == 0) {
@@ -33,7 +34,10 @@ bool fileNext() {
 			return 0; // End of read
 		} else {
 			readerPoint--;
-			fileNext(); // Recursively call to skip include
+
+			// Recursively call to skip include
+			// (We don't want a return value)
+			goto fileNext_top;
 		}
 	}
 
@@ -48,8 +52,8 @@ void fileOpen(char *file) {
 	// '$' is library location
 	if (file[0] == '$') {
 		char location[128];
-		strcat(location, CASM_LOCATION);
-		strcat(location, file);
+		strcpy(location, CASM_LOCATION);
+		strcat(location, file + 1);
 		readerStack[readerPoint] = fopen(location, "r");
 	} else {
 		readerStack[readerPoint] = fopen(file, "r");
