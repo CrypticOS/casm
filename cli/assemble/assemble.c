@@ -44,7 +44,17 @@ bool fileNext() {
 void fileOpen(char *file) {
 	line++; // To skip to line after inc
 	readerPoint++;
-	readerStack[readerPoint] = fopen(file, "r");
+
+	// '$' is library location
+	if (file[0] == '$') {
+		char location[128];
+		strcat(location, CASM_LOCATION);
+		strcat(location, file);
+		readerStack[readerPoint] = fopen(location, "r");
+	} else {
+		readerStack[readerPoint] = fopen(file, "r");
+	}
+	
 	if (readerStack[readerPoint] == NULL) {
 		puts("ERR: Skipping bad file included");
 	}
@@ -272,6 +282,8 @@ void assemble(char *file) {
 			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
 			if (tokens[1].type == STRING) {
+				got(&memory, memory.used);
+
 				// The string printing algorithm is enhanced and
 				// optimized.
 				for (size_t i = 0; tokens[1].text[i] != '\0'; i++) {
