@@ -246,9 +246,6 @@ void assemble(char *file) {
 			memory.used += 1;
 			out("!"); // Reset unitialized value
 			putInt(tokens[2].value);
-			// out(">");
-			// memory.used++;
-			// memory.position++;
 		} else if (!strcmp(tokens[0].text, "arr")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
@@ -340,12 +337,10 @@ void assemble(char *file) {
 			out("$"); // JMP
 		} else if (!strcmp(tokens[0].text, "equ")) {
 			out("dd"); // Next two are needed as compare values
-			//got(&memory, memory.used);
 			putTok(&memory, &tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
 			
 			putTok(&memory, &tokens[2], 1);
-			//got(&memory, memory.used);
 			out("^a"); // UP, from second to first compare value
 			
 			int location = locateObject(&memory, tokens[3].text, LABEL);
@@ -362,7 +357,6 @@ void assemble(char *file) {
 			out("^"); // UP
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
-			//int oldLocation = memory.position;
 			if (tokens[2].type == TEXT && !tokens[2].addressOf) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
@@ -372,9 +366,6 @@ void assemble(char *file) {
 				gotVar(&memory, tokens[1].text);
 				putTok(&memory, &tokens[2], 0);
 			}
-
-			//got(&memory, oldLocation);
-			//got(&memory, memory.used);
 		} else if (!strcmp(tokens[0].text, "run")) {
 			// Find run label
 			int i = 0;
