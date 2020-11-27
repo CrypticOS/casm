@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "options.h"
 #include "header.h"
-
-#define MAX_INPUT 20000
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
@@ -16,6 +15,7 @@ int main(int argc, char *argv[]) {
 			"Examples:\n" \
 			"\tcasm a foo.casm > a.out && casm r a.out"
 		);
+		
 		return 0;
 	}
 	
@@ -25,13 +25,21 @@ int main(int argc, char *argv[]) {
 			puts("ERR: File not found.");
 			return 1;
 		}
-		
+
+		// Copy entirity
+		size_t index = 0;
 		char *input = malloc(sizeof(char) * MAX_INPUT);
-		fgets(input, MAX_INPUT, reader);
-		fclose(reader);
-	
-		run(input, argv[3]);
+		while (feof(reader)) {
+			char c = fgetc(reader);
+			if (c != '\n') {
+				input[index] = c;
+			}
+
+			index++;
+		}
 		
+		fclose(reader);
+		run(input, argv[3]);
 		free(input);
 	} else if (argv[1][0] == 'a') {
 		assemble(argv[2]);
