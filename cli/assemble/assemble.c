@@ -363,7 +363,7 @@ void assemble(char *file) {
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
 			//int oldLocation = memory.position;
-			if (tokens[2].type == TEXT) {
+			if (tokens[2].type == TEXT && !tokens[2].addressOf) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
 				gotVar(&memory, tokens[1].text);
