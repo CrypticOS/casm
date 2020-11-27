@@ -1,3 +1,6 @@
 [submodule "cli/emulate/gfx"]
 	path = cli/emulate/gfx
 	url = https://github.com/pufflegamerz/gfx
+[submodule "cli/gfx"]
+	path = cli/gfx
+	url = https://github.com/pufflegamerz/gfx

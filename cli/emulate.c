@@ -2,19 +2,17 @@
 #include <stdlib.h>
 #include "options.h"
 
-#define MAX_INPUT 1000
-#define MAX_TOP 100
-#define MAX_BOTTOM 10000
-#define MAX_LABELS 1000
+#if EMULATOR_WINDOW == 1
+	#include "gfx/gfx.h"
+#endif
 
-// Perform emulator system call
-void syscall() {
-	
-}
-
-// 16 bit emulator
 void run(char *input, char *keys) {
-	putchar(13); // Carriage return
+#if EMULATOR_WINDOW == 1
+	struct gfx_window window = gfx_open(500, 500, "CrypticOS Emulator");
+	struct gfx_interaction ia;
+	gfx_setColor(&window, 255, 0, 0);
+#endif
+		
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
@@ -31,10 +29,20 @@ void run(char *input, char *keys) {
 		}
 	}
 
+#if !EMULATOR_WINDOW
 	size_t get = 0;
+#endif
 	for (int c = 0; input[c] != '\0'; c++) {
 		switch (input[c]) {
 		case ',':
+#if EMULATOR_WINDOW == 1
+			ia = gfx_event();
+			while (ia.type != KEY) {
+				ia = gfx_event(&window);
+			}
+
+			membottom[bottomp] = ia.value;
+#else
 			if (EMULATOR_USE_KEYS) {
 				// Switch between regular and raw input modes.
 				system("/bin/stty raw");
@@ -52,7 +60,7 @@ void run(char *input, char *keys) {
 				membottom[bottomp] = keys[get];
 				get++;
 			}
-			
+#endif
 			break;
 		case '!':
 			membottom[bottomp] = 0;
@@ -70,7 +78,19 @@ void run(char *input, char *keys) {
 			membottom[bottomp]--;
 			break;
 		case '.':
+#if EMULATOR_WINDOW == 1
+			// Manage standard OUT instructions, for graphics.
+			switch (memtop[topp]) {
+			case 0: // WRITE_PIXEL
+				gfx_pixel(&window, memtop[topp + 1], memtop[topp + 2]);
+				break;
+			case 1: // SET_COLOR
+				gfx_setColor(&window, memtop[topp + 1], memtop[topp + 2], memtop[topp + 3]);
+				break;
+			}
+#else
 			putchar(membottom[bottomp]);
+#endif	
 			break;
 		case '>':
 			bottomp++;
@@ -102,14 +122,22 @@ void run(char *input, char *keys) {
 
 		// Debug char
 		case '#':
-			printf("[%d - %d]\n", c, bottomp);
 			break;
 		}
 	}
 
+	// Handle end of window event
+#if EMULATOR_WINDOW == 1
+	puts("Program finished. Press Q to exit.");
+	while (1) {
+		ia = gfx_event(&window);
+		if (ia.type == KEY && ia.value == 'q') {
+			break;
+		}
+	}
+#endif
+
 	free(membottom);
 	free(memtop);
 	free(labels);
-
-	putchar('\n');
 }
