@@ -29,14 +29,18 @@ int main(int argc, char *argv[]) {
 		// Copy entirity
 		size_t index = 0;
 		char *input = malloc(sizeof(char) * MAX_INPUT);
-		while (feof(reader)) {
+		while (1) {
 			char c = fgetc(reader);
-			if (c != '\n') {
-				input[index] = c;
+			if (feof(reader)) {
+				break;
 			}
-
+			
+			input[index] = c;
 			index++;
 		}
+
+		input[index] = '\0';
+		printf(input);
 		
 		fclose(reader);
 		run(input, argv[3]);
