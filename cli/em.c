@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "options.h"
 
 #if EMULATOR_WINDOW == 1
@@ -17,8 +16,8 @@ void run(char *input, char *keys) {
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 
-	unsigned short *topp = memtop;
-	unsigned short *bottomp = membottom;
+	size_t topp = 0;
+	size_t bottomp = 0;
 
 	// Locate Labels
 	size_t *labels = malloc(sizeof(size_t) * MAX_LABELS);
@@ -35,76 +34,19 @@ void run(char *input, char *keys) {
 #endif
 	for (int c = 0; input[c] != '\0'; c++) {
 		switch (input[c]) {
-		case '>':
-			bottomp++;
-			break;
-		case '<':
-			bottomp--;
-			break;
-		case '+':
-			(*bottomp)++;
-			break;
-		case '.':
-#if EMULATOR_WINDOW == 1
-			// Manage standard OUT instructions, for graphics.
-			switch (*topp) {
-			case 0: // WRITE_PIXEL
-				gfx_pixel(&window, *(topp + 1), *(topp + 2));
-				break;
-			case 1: // SET_COLOR
-				gfx_setColor(&window, *(topp + 1), *(topp + 2), *(topp + 3));
-				break;
-			}
-#else
-			putchar(*bottomp);
-#endif	
-		break;
-		case '!':
-			*bottomp = 0;
-			break;
-		case '%':
-			*bottomp += 50;
-			break;
-		case '*':
-			*bottomp += 5;
-			break;
-		case 'd':
-			topp++;
-			break;
-		case 'a':
-			topp--;
-			break;
-		case '^':
-			*topp = *bottomp;
-			break;
-		case '$':
-			c = labels[(*topp) - 1];
-			break;
-		case '?':
-			if (*(topp + 1) == *(topp + 2)) {
-				c = labels[(*topp) - 1];
-			}
-
-			break;
-		case 'v':
-			*bottomp = *topp;
-			break;
-		case '-':
-			(*bottomp)--;
-			break;
 		case ',':
-		#if EMULATOR_WINDOW == 1
+#if EMULATOR_WINDOW == 1
 			ia = gfx_event();
 			while (ia.type != KEY) {
 				ia = gfx_event(&window);
 			}
 
-			*bottomp = ia.value;
+			membottom[bottomp] = ia.value;
 #else
 			if (EMULATOR_USE_KEYS) {
 				// Switch between regular and raw input modes.
 				system("/bin/stty raw");
-				*bottomp = getchar();
+				membottom[bottomp] = getchar();
 				system("/bin/stty cooked");
 			} else {
 				if (keys[get] == '\0') {
@@ -115,10 +57,67 @@ void run(char *input, char *keys) {
 					return;
 				}
 
-				*bottomp = keys[get];
+				membottom[bottomp] = keys[get];
 				get++;
 			}
 #endif
+			break;
+		case '!':
+			membottom[bottomp] = 0;
+			break;
+		case '%':
+			membottom[bottomp] += 50;
+			break;
+		case '*':
+			membottom[bottomp] += 5;
+			break;
+		case '+':
+			membottom[bottomp]++;
+			break;
+		case '-':
+			membottom[bottomp]--;
+			break;
+		case '.':
+#if EMULATOR_WINDOW == 1
+			// Manage standard OUT instructions, for graphics.
+			switch (memtop[topp]) {
+			case 0: // WRITE_PIXEL
+				gfx_pixel(&window, memtop[topp + 1], memtop[topp + 2]);
+				break;
+			case 1: // SET_COLOR
+				gfx_setColor(&window, memtop[topp + 1], memtop[topp + 2], memtop[topp + 3]);
+				break;
+			}
+#else
+			putchar(membottom[bottomp]);
+#endif	
+			break;
+		case '>':
+			bottomp++;
+			break;
+		case '<':
+			bottomp--;
+			break;
+		case 'd':
+			topp++;
+			break;
+		case 'a':
+			topp--;
+			break;
+		case '^':
+			memtop[topp] = membottom[bottomp];
+			break;
+		case 'v':
+			membottom[bottomp] = memtop[topp];
+			break;
+		case '$':
+			c = labels[memtop[topp] - 1];
+			break;
+		case '?':
+			if (memtop[topp + 1] == memtop[topp + 2]) {
+				c = labels[memtop[topp] - 1];
+			}
+
 			break;
 
 		// Debug char

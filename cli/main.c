@@ -27,20 +27,20 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Copy entirity
-		size_t index = 0;
 		char *input = malloc(sizeof(char) * MAX_INPUT);
+		char *index = input;
 		while (1) {
-			char c = fgetc(reader);
+			int c = fgetc(reader);
 			if (feof(reader)) {
 				break;
 			}
-			
-			input[index] = c;
+
+			*index = (char)c;
 			index++;
 		}
 
-		input[index] = '\0';
-		printf(input);
+		*index = '\0';
+		puts(input);
 		
 		fclose(reader);
 		run(input, argv[3]);

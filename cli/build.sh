@@ -1,5 +1,5 @@
 tcc -Wall gfx/gfx.c\
-	emulate.c\
+	em.c\
 	assemble/lex.c\
 	assemble/assemble.c\
 	main.c\
