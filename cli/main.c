@@ -40,11 +40,12 @@ int main(int argc, char *argv[]) {
 		}
 
 		*index = '\0';
-		puts(input);
 		
 		fclose(reader);
 		run(input, argv[3]);
 		free(input);
+
+		putchar('\n');
 	} else if (argv[1][0] == 'a') {
 		assemble(argv[2]);
 	}
