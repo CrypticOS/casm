@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../options.h"
+#include "../header.h"
 #include "object.h"
 #include "lex.h"
 

@@ -4,3 +4,6 @@
 [submodule "cli/gfx"]
 	path = cli/gfx
 	url = https://github.com/pufflegamerz/gfx
+[submodule "gfx"]
+	path = gfx
+	url = https://github.com/pufflegamerz/gfx

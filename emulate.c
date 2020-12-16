@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "options.h"
+#include "header.h"
 
 #if EMULATOR_WINDOW == 1
 	#include "gfx/gfx.h"
