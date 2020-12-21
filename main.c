@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		// Copy entirity
+		// Copy file into memory
 		char *input = malloc(sizeof(char) * MAX_INPUT);
 		char *index = input;
 		while (1) {

@@ -6,16 +6,37 @@
 #include "object.h"
 #include "lex.h"
 
+// Get folder from file location
+// "/home/daniel/f.txt" > "/home/daniel/"
+void getloc(char *dest, char *src) {
+	size_t i = strlen(dest);
+	while (dest[i - 1] != '/') {
+		i--;
+	}
+    
+    size_t c;
+	for (c = 0; c < i; c++) {
+		src[c] = dest[c];
+	}
+	
+	src[c] = '\0';
+}
+
+struct Reader {
+	FILE *file;
+	char location[50];	
+};
+
 // For recursive file reader
 char buffer[MAX_LINE];
-FILE *readerStack[3];
+struct Reader *readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
 // free all file readers
 void fileKill() {
 	while (readerPoint != 0) {
-		fclose(readerStack[readerPoint]);
+		fclose(readerStack[readerPoint]->file);
 		readerPoint--;
 	}
 }
@@ -23,8 +44,8 @@ void fileKill() {
 // Check end of current file
 bool fileNext() {
 	fileNext_top:
-	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
-		fclose(readerStack[readerPoint]);
+	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]->file) == NULL) {
+		fclose(readerStack[readerPoint]->file);
 		if (line == 0) {
 			puts("ERR: Skipping bad file");
 			readerPoint--;
@@ -49,14 +70,22 @@ void fileOpen(char *file) {
 	line++; // To skip to line after inc
 	readerPoint++;
 
-	// '$' is library location
 	if (file[0] == '$') {
+		// STD location
 		char location[128];
 		strcpy(location, CASM_LOCATION);
 		strcat(location, file + 1);
-		readerStack[readerPoint] = fopen(location, "r");
+		
+		strcpy(readerStack[readerPoint]->location, CASM_LOCATION);
+		readerStack[readerPoint]->file = fopen(location, "r");
+	} else if (file[0] == '/') {
+		// Absolute location
+		getloc(readerStack[readerPoint]->location, file);
+		readerStack[readerPoint]->file = fopen(file, "r");
 	} else {
-		readerStack[readerPoint] = fopen(file, "r");
+		// Get location without file name
+		getloc(readerStack[readerPoint]->location, file);
+		readerStack[readerPoint]->file = fopen(file, "r");
 	}
 	
 	if (readerStack[readerPoint] == NULL) {
@@ -144,6 +173,16 @@ void putTok(struct Memory *memory, struct Token *token, bool reset) {
 }
 
 void assemble(char *file) {
+	readerStack[readerPoint]->file = fopen(file, "r");
+	if (readerStack[readerPoint] == NULL) {
+		puts("ERR: File not found.");
+		return;
+	}
+
+	// Set location of file
+	getloc(readerStack[readerPoint]->location, file);
+
+	// Main memory object to keep up with memory
 	struct Memory memory;
 	memory.length = 0;
 	memory.used = 0;
@@ -151,19 +190,13 @@ void assemble(char *file) {
 
 	// Use ~32k ram for memory objects
 	memory.d = malloc(sizeof(struct MemObject) * 500);
-	
+
+	// Current instruction tokens
 	struct Token tokens[MAX_TOK];
 
-	int labelsFound = 1;
-	bool run = 1; // For recursive while loop
-
-	readerStack[readerPoint] = fopen(file, "r");
-	if (readerStack[readerPoint] == NULL) {
-		puts("ERR: File not found.");
-		exit(1);
-	}
-	
 	// Lex through the labels/runs first.
+	bool run = 1; // For recursive while loop
+	int labelsFound = 1;
 	while (1) {
 		run = fileNext();
 		if (!run) {
@@ -197,9 +230,9 @@ void assemble(char *file) {
 
 	// Close and reopen to pointer
 	readerPoint = 0;
-	readerStack[readerPoint] = fopen(file, "r");
+	readerStack[readerPoint]->file = fopen(file, "r");
 
-	// Lex regular instructions
+	// Assemble the instructions
 	line = 0;
 	while (1) {
 		run = fileNext();
@@ -212,7 +245,7 @@ void assemble(char *file) {
 			continue;
 		}
 
-		// Try to match define with tokens
+		// Replace output with defined tokens
 		for (int i = 0; i < length; i++) {
 			if (tokens[i].type == TEXT) {
 				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
@@ -313,7 +346,7 @@ void assemble(char *file) {
 			gotVar(&memory, tokens[1].text);
 
 			// Since there are no %*+ for subtract, we must
-			// do solely -s instead.
+			// do solely '-'s instead.
 			while (tokens[2].value != 0) {
 				out("-");
 				tokens[2].value--;
