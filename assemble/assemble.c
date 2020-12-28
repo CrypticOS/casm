@@ -8,18 +8,22 @@
 
 // Get folder from file location
 // "/home/daniel/f.txt" > "/home/daniel/"
-void getloc(char *dest, char *src) {
-	size_t i = strlen(dest);
-	while (dest[i - 1] != '/') {
+void getloc(char dest[], char src[]) {
+	size_t i = strlen(src);
+	while (src[i - 1] != '/') {
 		i--;
+		if (i == 0) {
+		    dest[0] = '\0';
+		    return;
+		}
 	}
     
     size_t c;
 	for (c = 0; c < i; c++) {
-		src[c] = dest[c];
+		dest[c] = src[c];
 	}
 	
-	src[c] = '\0';
+	dest[c] = '\0';
 }
 
 struct Reader {
@@ -29,14 +33,14 @@ struct Reader {
 
 // For recursive file reader
 char buffer[MAX_LINE];
-struct Reader *readerStack[3];
+struct Reader readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
 // free all file readers
 void fileKill() {
 	while (readerPoint != 0) {
-		fclose(readerStack[readerPoint]->file);
+		fclose(readerStack[readerPoint].file);
 		readerPoint--;
 	}
 }
@@ -44,8 +48,8 @@ void fileKill() {
 // Check end of current file
 bool fileNext() {
 	fileNext_top:
-	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]->file) == NULL) {
-		fclose(readerStack[readerPoint]->file);
+	if (fgets(buffer, MAX_LINE, readerStack[readerPoint].file) == NULL) {
+		fclose(readerStack[readerPoint].file);
 		if (line == 0) {
 			puts("ERR: Skipping bad file");
 			readerPoint--;
@@ -66,7 +70,7 @@ bool fileNext() {
 }
 
 // Pause current file reading, open new one
-void fileOpen(char *file) {
+void fileOpen(char file[]) {
 	line++; // To skip to line after inc
 	readerPoint++;
 
@@ -76,19 +80,19 @@ void fileOpen(char *file) {
 		strcpy(location, CASM_LOCATION);
 		strcat(location, file + 1);
 		
-		strcpy(readerStack[readerPoint]->location, CASM_LOCATION);
-		readerStack[readerPoint]->file = fopen(location, "r");
+		strcpy(readerStack[readerPoint].location, CASM_LOCATION);
+		readerStack[readerPoint].file = fopen(location, "r");
 	} else if (file[0] == '/') {
 		// Absolute location
-		getloc(readerStack[readerPoint]->location, file);
-		readerStack[readerPoint]->file = fopen(file, "r");
+		getloc(readerStack[readerPoint].location, file);
+		readerStack[readerPoint].file = fopen(file, "r");
 	} else {
 		// Get location without file name
-		getloc(readerStack[readerPoint]->location, file);
-		readerStack[readerPoint]->file = fopen(file, "r");
+		getloc(readerStack[readerPoint].location, file);
+		readerStack[readerPoint].file = fopen(file, "r");
 	}
 	
-	if (readerStack[readerPoint] == NULL) {
+	if (readerStack[readerPoint].file == NULL) {
 		puts("ERR: Skipping bad file included");
 	}
 }
@@ -172,16 +176,16 @@ void putTok(struct Memory *memory, struct Token *token, bool reset) {
 	}
 }
 
-void assemble(char *file) {
-	readerStack[readerPoint]->file = fopen(file, "r");
-	if (readerStack[readerPoint] == NULL) {
-		puts("ERR: File not found.");
+void assemble(char file[]) {
+	readerStack[readerPoint].file = fopen(file, "r");
+	if (readerStack[readerPoint].file == NULL) {
+		puts("ERR: Bad file.");
 		return;
 	}
-
+	
 	// Set location of file
-	getloc(readerStack[readerPoint]->location, file);
-
+	getloc(readerStack[readerPoint].location, file);
+	
 	// Main memory object to keep up with memory
 	struct Memory memory;
 	memory.length = 0;
@@ -230,7 +234,7 @@ void assemble(char *file) {
 
 	// Close and reopen to pointer
 	readerPoint = 0;
-	readerStack[readerPoint]->file = fopen(file, "r");
+	readerStack[readerPoint].file = fopen(file, "r");
 
 	// Assemble the instructions
 	line = 0;
