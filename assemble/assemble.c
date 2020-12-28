@@ -6,41 +6,16 @@
 #include "object.h"
 #include "lex.h"
 
-// Get folder from file location
-// "/home/daniel/f.txt" > "/home/daniel/"
-void getloc(char dest[], char src[]) {
-	size_t i = strlen(src);
-	while (src[i - 1] != '/') {
-		i--;
-		if (i == 0) {
-		    dest[0] = '\0';
-		    return;
-		}
-	}
-    
-    size_t c;
-	for (c = 0; c < i; c++) {
-		dest[c] = src[c];
-	}
-	
-	dest[c] = '\0';
-}
-
-struct Reader {
-	FILE *file;
-	char location[50];	
-};
-
 // For recursive file reader
 char buffer[MAX_LINE];
-struct Reader readerStack[3];
+FILE *readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
 // free all file readers
 void fileKill() {
 	while (readerPoint != 0) {
-		fclose(readerStack[readerPoint].file);
+		fclose(readerStack[readerPoint]);
 		readerPoint--;
 	}
 }
@@ -48,8 +23,8 @@ void fileKill() {
 // Check end of current file
 bool fileNext() {
 	fileNext_top:
-	if (fgets(buffer, MAX_LINE, readerStack[readerPoint].file) == NULL) {
-		fclose(readerStack[readerPoint].file);
+	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
+		fclose(readerStack[readerPoint]);
 		if (line == 0) {
 			puts("ERR: Skipping bad file");
 			readerPoint--;
@@ -70,29 +45,21 @@ bool fileNext() {
 }
 
 // Pause current file reading, open new one
-void fileOpen(char file[]) {
+void fileOpen(char *file) {
 	line++; // To skip to line after inc
 	readerPoint++;
 
+	// '$' is library location
 	if (file[0] == '$') {
-		// STD location
 		char location[128];
 		strcpy(location, CASM_LOCATION);
 		strcat(location, file + 1);
-		
-		strcpy(readerStack[readerPoint].location, CASM_LOCATION);
-		readerStack[readerPoint].file = fopen(location, "r");
-	} else if (file[0] == '/') {
-		// Absolute location
-		getloc(readerStack[readerPoint].location, file);
-		readerStack[readerPoint].file = fopen(file, "r");
+		readerStack[readerPoint] = fopen(location, "r");
 	} else {
-		// Get location without file name
-		getloc(readerStack[readerPoint].location, file);
-		readerStack[readerPoint].file = fopen(file, "r");
+		readerStack[readerPoint] = fopen(file, "r");
 	}
 	
-	if (readerStack[readerPoint].file == NULL) {
+	if (readerStack[readerPoint] == NULL) {
 		puts("ERR: Skipping bad file included");
 	}
 }
@@ -176,17 +143,7 @@ void putTok(struct Memory *memory, struct Token *token, bool reset) {
 	}
 }
 
-void assemble(char file[]) {
-	readerStack[readerPoint].file = fopen(file, "r");
-	if (readerStack[readerPoint].file == NULL) {
-		puts("ERR: Bad file.");
-		return;
-	}
-	
-	// Set location of file
-	getloc(readerStack[readerPoint].location, file);
-	
-	// Main memory object to keep up with memory
+void assemble(char *file) {
 	struct Memory memory;
 	memory.length = 0;
 	memory.used = 0;
@@ -194,13 +151,19 @@ void assemble(char file[]) {
 
 	// Use ~32k ram for memory objects
 	memory.d = malloc(sizeof(struct MemObject) * 500);
-
-	// Current instruction tokens
+	
 	struct Token tokens[MAX_TOK];
 
-	// Lex through the labels/runs first.
-	bool run = 1; // For recursive while loop
 	int labelsFound = 1;
+	bool run = 1; // For recursive while loop
+
+	readerStack[readerPoint] = fopen(file, "r");
+	if (readerStack[readerPoint] == NULL) {
+		puts("ERR: File not found.");
+		exit(1);
+	}
+	
+	// Lex through the labels/runs first.
 	while (1) {
 		run = fileNext();
 		if (!run) {
@@ -234,9 +197,9 @@ void assemble(char file[]) {
 
 	// Close and reopen to pointer
 	readerPoint = 0;
-	readerStack[readerPoint].file = fopen(file, "r");
+	readerStack[readerPoint] = fopen(file, "r");
 
-	// Assemble the instructions
+	// Lex regular instructions
 	line = 0;
 	while (1) {
 		run = fileNext();
@@ -249,7 +212,7 @@ void assemble(char file[]) {
 			continue;
 		}
 
-		// Replace output with defined tokens
+		// Try to match define with tokens
 		for (int i = 0; i < length; i++) {
 			if (tokens[i].type == TEXT) {
 				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
@@ -350,7 +313,7 @@ void assemble(char file[]) {
 			gotVar(&memory, tokens[1].text);
 
 			// Since there are no %*+ for subtract, we must
-			// do solely '-'s instead.
+			// do solely -s instead.
 			while (tokens[2].value != 0) {
 				out("-");
 				tokens[2].value--;

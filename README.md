@@ -27,6 +27,3 @@ add a 1
 add a '0'
 set a 'Z'
 ```
-
-# License
-General Public License 2.0
