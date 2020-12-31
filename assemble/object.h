@@ -4,7 +4,7 @@
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
 	VAR, ARR,
-	RUN, DEFINE,
+	RUN, DEFINE, ADDRESSOF,
 	WORKSPACE
 };
 
@@ -13,7 +13,6 @@ struct Token {
 	int value;
 	int length;
 	int type;
-	bool addressOf;
 };
 
 // memory object for vars, arrs, labels, etc

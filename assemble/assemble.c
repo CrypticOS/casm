@@ -12,7 +12,7 @@ FILE *readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
-// free all file readers
+// Free entirety of file reader stack
 void fileKill() {
 	while (readerPoint != 0) {
 		fclose(readerStack[readerPoint]);
@@ -128,18 +128,7 @@ void putTok(struct Memory *memory, struct Token *token, bool reset) {
 		out("!");
 		putInt(token->value);
 	} else if (token->type == TEXT) {
-		if (token->addressOf) {
-			int location = locateObject(memory, token->text, VAR);
-			if (location == -1) {
-				puts("ERR: Bad variable");
-				return;
-			}
-
-			out("!");
-			putInt(memory->used - memory->d[location].location);
-		} else {
-			gotVar(memory, token->text);
-		}
+		gotVar(memory, token->text);
 	}
 }
 
@@ -212,7 +201,8 @@ void assemble(char *file) {
 			continue;
 		}
 
-		// Try to match define with tokens
+		// Replace tokens. Replace defined keywords
+		// with their values, replace
 		for (int i = 0; i < length; i++) {
 			if (tokens[i].type == TEXT) {
 				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
@@ -220,6 +210,15 @@ void assemble(char *file) {
 					tokens[i].type = DIGIT;
 					tokens[i].value = memory.d[tryDef].location;
 				}
+			} if (tokens[i].type == ADDRESSOF) {
+				int location = locateObject(&memory, tokens[i].text, VAR);
+				if (location == -1) {
+					puts("ERR: Bad variable");
+					return;
+				}
+
+				tokens[i].type = DIGIT;
+				tokens[i].value = memory.used - memory.d[location].location;
 			}
 		}
 
@@ -250,7 +249,7 @@ void assemble(char *file) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);
 			memory.d[memory.length].location = memory.used;
-			memory.d[memory.length].length = tokens[2].value; // vars are 1 int wide
+			memory.d[memory.length].length = tokens[2].value;
 			memory.d[memory.length].type = VAR;
 			memory.length++;
 
@@ -357,7 +356,7 @@ void assemble(char *file) {
 			out("^"); // UP
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
-			if (tokens[2].type == TEXT && !tokens[2].addressOf) {
+			if (tokens[2].type == TEXT) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
 				gotVar(&memory, tokens[1].text);

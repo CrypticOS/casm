@@ -47,21 +47,15 @@ int lex(struct Token *tokens, char *line) {
 			}
 		}
 
-		tokens[token].addressOf = 0;
-
 		// Check if this is a nothing line (comments, blank)
 		if (line[c] == '\n' || line[c] == '\0') {
 			return token;
 		}
 
-		if (line[c] == '&') {
-			tokens[token].addressOf = 1;
-			c++;
-		}
-
 		tokens[token].length = 0;
 		tokens[token].type = 0;
 		tokens[token].value = 0;
+		
 		if (isAlpha(line[c])) {
 			tokens[token].type = TEXT;
 			while (isAlpha(line[c])) {
@@ -87,6 +81,16 @@ int lex(struct Token *tokens, char *line) {
 			c++;
 			tokens[token].value = line[c];
 			c += 2; // Skip ' and goto next char
+		} else if (line[c] == '[') {
+			tokens[token].type = ADDRESSOF;
+			c++;
+			while (line[c] != ']') {
+				tokens[token].text[tokens[token].length] = line[c];
+				tokens[token].length++;
+				c++;
+			}
+
+			c++; // Skip ]
 		} else if (line[c] == '"') {
 			tokens[token].type = STRING;
 			c++; // Skip "
