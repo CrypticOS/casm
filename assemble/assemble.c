@@ -143,7 +143,7 @@ void assemble(char *file) {
 	
 	struct Token tokens[MAX_TOK];
 
-	int labelsFound = 1;
+	int labelsFound = 0;
 	bool run = 1; // For recursive while loop
 
 	readerStack[readerPoint] = fopen(file, "r");
