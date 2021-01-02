@@ -1,4 +1,3 @@
-test
 *.o
 test.o
 compiler.o
@@ -7,3 +6,5 @@ nasm.asm
 compiler
 casm
 a
+b
+c

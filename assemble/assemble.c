@@ -143,7 +143,7 @@ void assemble(char *file) {
 	
 	struct Token tokens[MAX_TOK];
 
-	int labelsFound = 0;
+	int labelsFound = 1;
 	bool run = 1; // For recursive while loop
 
 	readerStack[readerPoint] = fopen(file, "r");
@@ -239,12 +239,17 @@ void assemble(char *file) {
 			memory.d[memory.length].type = VAR;
 			memory.length++;
 
-			// Go to the variable's spot in memory
-			// In order to add value to it.
-			got(&memory, memory.used);
+			// Allow variables to be unitialized if no value
+			// is specified
+			if (length != 2) {
+				// Go to the variable's spot in memory
+				// In order to add value to it.
+				got(&memory, memory.used);
+				out("!"); // Reset unitialized value
+				putInt(tokens[2].value);
+			}
+
 			memory.used += 1;
-			out("!"); // Reset unitialized value
-			putInt(tokens[2].value);
 		} else if (!strcmp(tokens[0].text, "arr")) {
 			// Add variable into object list
 			strcpy(memory.d[memory.length].name, tokens[1].text);

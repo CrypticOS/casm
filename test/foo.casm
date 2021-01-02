@@ -1,0 +1,4 @@
+top:
+foo:
+jmp top
+jmp foo
