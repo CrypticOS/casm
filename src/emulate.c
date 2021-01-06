@@ -78,7 +78,7 @@ void run(char *input, char *keys) {
 			*topp = *bottomp;
 			break;
 		case '$':
-			c = labels[(*topp) - 1];
+			c = labels[(*topp)];
 			break;
 		case '?':
 			if (*(topp + 1) == *(topp + 2)) {
