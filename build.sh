@@ -1,6 +1,8 @@
+cd src
 tcc -Wall gfx/gfx.c\
 	emulate.c\
-	assemble/lex.c\
-	assemble/assemble.c\
+	lex.c\
+	assemble.c\
 	main.c\
-	-o casm -lX11
+	-o ../casm -lX11
+cd ..

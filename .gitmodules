@@ -7,3 +7,6 @@
 [submodule "gfx"]
 	path = gfx
 	url = https://github.com/pufflegamerz/gfx
+[submodule "src/gfx"]
+	path = src/gfx
+	url = https://github.com/pufflegamerz/gfx

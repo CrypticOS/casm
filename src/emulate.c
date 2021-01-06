@@ -82,7 +82,7 @@ void run(char *input, char *keys) {
 			break;
 		case '?':
 			if (*(topp + 1) == *(topp + 2)) {
-				c = labels[(*topp) - 1];
+				c = labels[(*topp)];
 			}
 
 			break;
@@ -101,7 +101,7 @@ void run(char *input, char *keys) {
 
 			*bottomp = ia.value;
 #else
-			if (EMULATOR_USE_KEYS) {
+			if (keys == NULL) {
 				// Switch between regular and raw input modes.
 				system("/bin/stty raw");
 				*bottomp = getchar();

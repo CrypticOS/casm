@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../header.h"
+#include "header.h"
 #include "object.h"
 #include "lex.h"
 
@@ -143,7 +143,7 @@ void assemble(char *file) {
 	
 	struct Token tokens[MAX_TOK];
 
-	int labelsFound = 1;
+	int labelsFound = 0;
 	bool run = 1; // For recursive while loop
 
 	readerStack[readerPoint] = fopen(file, "r");
@@ -211,14 +211,21 @@ void assemble(char *file) {
 					tokens[i].value = memory.d[tryDef].location;
 				}
 			} if (tokens[i].type == ADDRESSOF) {
+				// For variables get location, for labels get ID
+				// (occurence in output file)
+				tokens[i].type = DIGIT;
 				int location = locateObject(&memory, tokens[i].text, VAR);
 				if (location == -1) {
-					puts("ERR: Bad variable");
-					return;
+					location = locateObject(&memory, tokens[i].text, LABEL);
+					if (location == -1) {
+						puts("ERR: Bad request for addressof.");
+						return;
+					} else {
+						tokens[i].value = memory.d[location].location;
+					}
+				} else {
+					tokens[i].value = memory.used - memory.d[location].location;	
 				}
-
-				tokens[i].type = DIGIT;
-				tokens[i].value = memory.used - memory.d[location].location;
 			}
 		}
 
@@ -261,10 +268,12 @@ void assemble(char *file) {
 			// Add up the memory used.
 			memory.used += tokens[2].value;
 
-			// Initialize the length of the array if wanted
-			if (INITIALIZE_ARRAYS) {
+			// Initialize the array if a fourth
+			// token is specified. Can be zeros.
+			if (length > 3) {
 				while (tokens[2].value != 0) {
-					out("!>");
+					putInt(tokens[3].value);
+					out(">");
 					memory.position++;
 					tokens[2].value--;
 				}

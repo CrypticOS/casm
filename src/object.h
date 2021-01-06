@@ -3,6 +3,7 @@
 
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
+	VALUE, // request either a label or a variable
 	VAR, ARR,
 	RUN, DEFINE, ADDRESSOF,
 	WORKSPACE
