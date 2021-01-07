@@ -1,5 +1,0 @@
-asd:
-jmp foo
-foo:
-put [foo]
-inl "%--."

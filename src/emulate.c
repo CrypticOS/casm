@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <unistd.h>
 #include "header.h"
 
 #if EMULATOR_WINDOW == 1
@@ -15,15 +15,18 @@ void run(char *input, char *keys) {
 #endif
 		
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
+	if (memtop == NULL) {puts("Alloc err"); return;}
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
-
+	if (membottom == NULL) {puts("Alloc err"); return;}
+	size_t *labels = malloc(sizeof(size_t) * MAX_LABELS);
+	if (labels == NULL) {puts("Alloc err"); return;}
+	
 	unsigned short *topp = memtop;
 	unsigned short *bottomp = membottom;
 
-	// Locate Labels
-	size_t *labels = malloc(sizeof(size_t) * MAX_LABELS);
-	int l = 0;
-	for (int c = 0; input[c] != '\0'; c++) {
+	// Locate labels
+	size_t l = 0;
+	for (size_t c = 0; input[c] != '\0'; c++) {
 		if (input[c] == '|') {
 			labels[l] = c;
 			l++;
@@ -35,6 +38,8 @@ void run(char *input, char *keys) {
 #endif
 	for (int c = 0; input[c] != '\0'; c++) {
 		switch (input[c]) {
+		case '|':
+			break;
 		case '>':
 			bottomp++;
 			break;

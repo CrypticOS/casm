@@ -1,0 +1,4 @@
+var az 'A'
+equ az 2 a
+equ az 1 a
+a:
