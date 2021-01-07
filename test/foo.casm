@@ -1,4 +1,5 @@
-top:
-foo:
-jmp top
+asd:
 jmp foo
+foo:
+put [foo]
+inl "%--."

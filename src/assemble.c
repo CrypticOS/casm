@@ -437,6 +437,9 @@ void assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "inc")) {
 			fileOpen(tokens[1].text);
 			continue;
+		} else if (!strcmp(tokens[0].text, "put")) {
+			out("!");
+			putInt(tokens[1].value);
 		}
 		
 		line++;
