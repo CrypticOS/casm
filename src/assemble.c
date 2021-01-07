@@ -221,10 +221,13 @@ void assemble(char *file) {
 						puts("ERR: Bad request for addressof.");
 						return;
 					} else {
+						// Label
 						tokens[i].value = memory.d[location].location;
 					}
 				} else {
-					tokens[i].value = memory.used - memory.d[location].location;	
+					// Variable
+					// +1 How far back the variable is. Must be after it.
+					tokens[i].value = memory.used - memory.d[location].location;
 				}
 			}
 		}
@@ -271,11 +274,23 @@ void assemble(char *file) {
 			// Initialize the array if a fourth
 			// token is specified. Can be zeros.
 			if (length > 3) {
-				while (tokens[2].value != 0) {
+				// If not zero, copy the value instead of making
+				// it again every time.
+				if (tokens[3].value == 0) {
+					while (tokens[2].value != 0) {
+						out("!>");
+						memory.position++;
+						tokens[2].value--;
+					}
+				} else {
+					out("!");
 					putInt(tokens[3].value);
-					out(">");
-					memory.position++;
-					tokens[2].value--;
+					out("^>");
+					while (tokens[2].value != 0) {
+						out("v>");
+						memory.position++;
+						tokens[2].value--;
+					}
 				}
 			}
 		} else if (!strcmp(tokens[0].text, "got")) {

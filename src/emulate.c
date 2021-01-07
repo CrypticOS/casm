@@ -107,7 +107,9 @@ void run(char *input, char *keys) {
 				*bottomp = getchar();
 				system("/bin/stty cooked");
 			} else {
-				if (keys[get] == '\0') {
+				// Don't allow characters after null terminator to be
+				// read
+				if (get != 0 && keys[get - 1] == '\0') {
 					puts("Read outside input, stopping\n");
 					free(memtop);
 					free(membottom);
@@ -123,7 +125,13 @@ void run(char *input, char *keys) {
 
 		// Debug char
 		case '#':
-			break;
+			puts("\nHalting program.");
+			puts("Dumping 100 memory cells from bottom...");
+			for (size_t i = 0; i < 100; i++) {
+				putchar(membottom[i]);
+			}
+
+			goto endAll;
 		}
 	}
 
@@ -138,6 +146,8 @@ void run(char *input, char *keys) {
 	}
 #endif
 
+
+	endAll:
 	free(membottom);
 	free(memtop);
 	free(labels);
