@@ -1,5 +1,5 @@
 // What to replace '$' with at start of file names
-static const char CASM_LOCATION[] = "/home/daniel/Documents/crypticos/";
+static const char CASM_LOCATION[] = "/home/dan/Documents/crypticos/";
 #define INITIALIZE_ARRAYS 1
 
 // Whether to compile with in a X11 windowed

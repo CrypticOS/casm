@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "data.h"
 #include "object.h"
@@ -57,7 +58,9 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			case 'a':
-				assemble(argv[argc + 1]);
+				if (assemble(argv[argc + 1])) {
+					
+				}
 				break;
 			}
 		}

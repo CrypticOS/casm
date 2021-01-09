@@ -133,7 +133,8 @@ void putTok(struct Memory *memory, struct Token *token, bool reset) {
 	}
 }
 
-void assemble(char *file) {
+// Return 0/1 for good/bad assemble
+bool assemble(char *file) {
 	struct Memory memory;
 	memory.length = 0;
 	memory.used = 0;
@@ -141,9 +142,10 @@ void assemble(char *file) {
 
 	// Use ~32k ram for memory objects
 	memory.d = malloc(sizeof(struct MemObject) * 500);
+	if (memory.d == NULL) {puts("Alloc error"); return 1;}
 
 	// Default variable WKSP. Takes no space, only
-	// set to workspace location
+	// set to workspace location.
 	strcpy(memory.d[0].name, "WKSP");
 	memory.d[0].type = VAR;
 	memory.length++;
@@ -154,7 +156,7 @@ void assemble(char *file) {
 	readerStack[readerPoint] = fopen(file, "r");
 	if (readerStack[readerPoint] == NULL) {
 		puts("ERR: File not found.");
-		exit(1);
+		return 1;
 	}
 	
 	// Lex through the labels/runs first.
@@ -218,7 +220,7 @@ void assemble(char *file) {
 					location = locateObject(&memory, tokens[i].text, LABEL);
 					if (location == -1) {
 						puts("ERR: Bad request for addressof.");
-						return;
+						return 1;
 					} else {
 						// Label
 						tokens[i].value = memory.d[location].location;
@@ -298,12 +300,6 @@ void assemble(char *file) {
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
 			}
-		} else if (!strcmp(tokens[0].text, "str")) {
-			for (int c = 0; tokens[1].text[c] != '\0'; c++) {
-				memory.position++;
-				putInt(tokens[1].text[c]);
-				out(">");
-			}
 		} else if (!strcmp(tokens[0].text, "prt")) {
 			if (tokens[1].type == STRING) {
 				got(&memory, memory.used);
@@ -314,11 +310,13 @@ void assemble(char *file) {
 						if (tokens[1].text[i - 1] < tokens[1].text[i]) {
 							putInt(tokens[1].text[i] - tokens[1].text[i - 1]);
 							out(".");
+							continue;
 						} else if (tokens[1].text[i - 1] == tokens[1].text[i]) {
 							out(".");
+							continue;
 						}
 
-						continue;
+						// NOTE: Else go down below
 					}
 
 					out("!");
@@ -440,4 +438,5 @@ void assemble(char *file) {
 	}
 
 	killAll(&memory);
+	return 0;
 }
