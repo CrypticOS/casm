@@ -93,7 +93,7 @@ void putInt(int value) {
 	}
 }
 
-// Goto specific spot in memory
+// Go to a specific spot in memory
 void got(struct Memory *memory, int place) {
 	if (place > memory->position) {
 		while (place != memory->position) {
@@ -141,11 +141,15 @@ void assemble(char *file) {
 
 	// Use ~32k ram for memory objects
 	memory.d = malloc(sizeof(struct MemObject) * 500);
+
+	// Default variable WKSP. Takes no space, only
+	// set to workspace location
+	strcpy(memory.d[0].name, "WKSP");
+	memory.d[0].type = VAR;
+	memory.length++;
 	
 	struct Token tokens[MAX_TOK];
-
 	int labelsFound = 0;
-	bool run = 1; // For recursive while loop
 
 	readerStack[readerPoint] = fopen(file, "r");
 	if (readerStack[readerPoint] == NULL) {
@@ -154,12 +158,7 @@ void assemble(char *file) {
 	}
 	
 	// Lex through the labels/runs first.
-	while (1) {
-		run = fileNext();
-		if (!run) {
-			break;
-		}
-		
+	while (fileNext()) {
 		int length = lex(tokens, buffer);
 		if (length == 0) {
 			continue;
@@ -191,16 +190,15 @@ void assemble(char *file) {
 
 	// Lex regular instructions
 	line = 0;
-	while (1) {
-		run = fileNext();
-		if (!run) {
-			break;
-		}
-		
+	while (fileNext()) {
 		int length = lex(tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
+
+		// Set default variable WKSP before
+		// assembling each line
+		memory.d[0].location = memory.used;
 
 		// Replace tokens. Replace defined keywords
 		// with their values, replace
@@ -296,11 +294,7 @@ void assemble(char *file) {
 			}
 		} else if (!strcmp(tokens[0].text, "got")) {
 			if (tokens[1].type == TEXT) {
-				if (!strcmp(tokens[1].text, "WKSP")) {
-					got(&memory, memory.used);
-				} else {
-					gotVar(&memory, tokens[1].text);
-				}
+				gotVar(&memory, tokens[1].text);
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
 			}
@@ -314,18 +308,17 @@ void assemble(char *file) {
 			if (tokens[1].type == STRING) {
 				got(&memory, memory.used);
 
-				// The string printing algorithm is enhanced and
-				// optimized.
+				// The string printing algorithm is enhanced and optimized.
 				for (size_t i = 0; tokens[1].text[i] != '\0'; i++) {
 					if (i != 0) {
 						if (tokens[1].text[i - 1] < tokens[1].text[i]) {
 							putInt(tokens[1].text[i] - tokens[1].text[i - 1]);
 							out(".");
-							continue;
 						} else if (tokens[1].text[i - 1] == tokens[1].text[i]) {
 							out(".");
-							continue;
 						}
+
+						continue;
 					}
 
 					out("!");

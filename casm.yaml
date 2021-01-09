@@ -1,13 +1,17 @@
+# This is the syntax file for writing CASM code.
+# Use cp casm.yaml ~/.config/micro/syntax
+# (syntax folder may not exist)
+
 filetype: casm
 
 detect:
     filename: "\\.casm$"
 
 rules:
-    - statement: "\\b(jmp|got|ret|inl|ptr|equ|set|var|arr|add|sub|run|str|def|inc|prt)\\b"
+    - statement: "\\b(jmp|got|ret|inl|prt|equ|set|var|arr|add|sub|run|def|inc|put)\\b"
     
     # Kernel, std stuff
-    - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high)\\b"
+    - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high|WKSP)\\b"
     - identifier: "\\b(ga|gb|gc|gd|gr)\\b"
     
     - identifier: "[a-zA-Z_.]+:"
