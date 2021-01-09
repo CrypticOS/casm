@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "header.h"
+
 #include "object.h"
-#include "lex.h"
+#include "data.h"
+#include "header.h"
 
 // For recursive file reader
 char buffer[MAX_LINE];

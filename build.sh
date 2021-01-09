@@ -1,5 +1,5 @@
 cd src
-tcc -Wall gfx/gfx.c\
+gcc gfx/gfx.c\
 	emulate.c\
 	lex.c\
 	assemble.c\

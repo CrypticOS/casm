@@ -1,25 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "header.h"
 
-#if EMULATOR_WINDOW == 1
+#include "data.h"
+
+#if EMULATOR_WINDOW
 	#include "gfx/gfx.h"
 #endif
 
 void run(char *input, char *keys) {
-#if EMULATOR_WINDOW == 1
-	struct gfx_window window = gfx_open(640, 480, "CrypticOS Emulator");
-	struct gfx_interaction ia;
-	gfx_setColor(&window, 255, 0, 0);
-#endif
-		
+	#if EMULATOR_WINDOW == 1
+		struct gfx_window window = gfx_open(640, 480, "CrypticOS Emulator");
+		struct gfx_interaction ia;
+		gfx_setColor(&window, 255, 0, 0);
+	#endif
+
+	// Somewhat messy allocation code :(
 	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
 	if (memtop == NULL) {puts("Alloc err"); return;}
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
-	if (membottom == NULL) {puts("Alloc err"); return;}
+	if (membottom == NULL) {free(memtop); puts("Alloc err"); return;}
 	size_t *labels = malloc(sizeof(size_t) * MAX_LABELS);
-	if (labels == NULL) {puts("Alloc err"); return;}
+	if (labels == NULL) {free(memtop); free(membottom); puts("Alloc err"); return;}
 	
 	unsigned short *topp = memtop;
 	unsigned short *bottomp = membottom;
@@ -33,9 +35,10 @@ void run(char *input, char *keys) {
 		}
 	}
 
-#if !EMULATOR_WINDOW
-	size_t get = 0;
-#endif
+	#if !EMULATOR_WINDOW
+		size_t get = 0;
+	#endif
+	
 	for (int c = 0; input[c] != '\0'; c++) {
 		switch (input[c]) {
 		case '|':
@@ -50,19 +53,19 @@ void run(char *input, char *keys) {
 			(*bottomp)++;
 			break;
 		case '.':
-#if EMULATOR_WINDOW == 1
-			// Manage standard OUT instructions, for graphics.
-			switch (*topp) {
-			case 0: // WRITE_PIXEL
-				gfx_pixel(&window, *(topp + 1), *(topp + 2));
-				break;
-			case 1: // SET_COLOR
-				gfx_setColor(&window, *(topp + 1), *(topp + 2), *(topp + 3));
-				break;
-			}
-#else
-			putchar(*bottomp);
-#endif	
+			#if EMULATOR_WINDOW
+				// Manage standard OUT instructions, for graphics.
+				switch (*topp) {
+				case 0: // WRITE_PIXEL
+					gfx_pixel(&window, *(topp + 1), *(topp + 2));
+					break;
+				case 1: // SET_COLOR
+					gfx_setColor(&window, *(topp + 1), *(topp + 2), *(topp + 3));
+					break;
+				}
+			#else
+				putchar(*bottomp);
+			#endif	
 		break;
 		case '!':
 			*bottomp = 0;
@@ -98,34 +101,34 @@ void run(char *input, char *keys) {
 			(*bottomp)--;
 			break;
 		case ',':
-		#if EMULATOR_WINDOW == 1
-			ia = gfx_event();
-			while (ia.type != KEY) {
-				ia = gfx_event(&window);
-			}
-
-			*bottomp = ia.value;
-#else
-			if (keys == NULL) {
-				// Switch between regular and raw input modes.
-				system("/bin/stty raw");
-				*bottomp = getchar();
-				system("/bin/stty cooked");
-			} else {
-				// Don't allow characters after null terminator to be
-				// read
-				if (get != 0 && keys[get - 1] == '\0') {
-					puts("Read outside input, stopping\n");
-					free(memtop);
-					free(membottom);
-					free(labels);
-					return;
+			#if EMULATOR_WINDOW
+				ia = gfx_event();
+				while (ia.type != KEY) {
+					ia = gfx_event(&window);
 				}
 
-				*bottomp = keys[get];
-				get++;
-			}
-#endif
+				*bottomp = ia.value;
+			#else
+				if (keys == NULL) {
+					// Switch between regular and raw input modes.
+					system("/bin/stty raw");
+					*bottomp = getchar();
+					system("/bin/stty cooked");
+				} else {
+					// Don't allow characters after null terminator to be
+					// read
+					if (get != 0 && keys[get - 1] == '\0') {
+						puts("Read outside input, stopping\n");
+						free(memtop);
+						free(membottom);
+						free(labels);
+						return;
+					}
+
+					*bottomp = keys[get];
+					get++;
+				}
+			#endif
 			break;
 
 		// Debug char
@@ -141,15 +144,15 @@ void run(char *input, char *keys) {
 	}
 
 	// Handle end of window event
-#if EMULATOR_WINDOW == 1
-	puts("Program finished. Press Q to exit.");
-	while (1) {
-		ia = gfx_event(&window);
-		if (ia.type == KEY && ia.value == 'q') {
-			break;
+	#if EMULATOR_WINDOW
+		puts("Program finished. Press Q to exit.");
+		while (1) {
+			ia = gfx_event(&window);
+			if (ia.type == KEY && ia.value == 'q') {
+				break;
+			}
 		}
-	}
-#endif
+	#endif
 
 
 	endAll:

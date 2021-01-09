@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "object.h"
+#include "data.h"
 
 int isAlpha(char c) {
 	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '.' || c == '_')) {
@@ -18,7 +19,7 @@ int isDigit(char c) {
 	}
 }
 
-// Locate var, arr, lbl, from objects in memory from type
+// Locate variable, array, label, from objects in memory from type
 int locateObject(struct Memory *memory, char *name, int type) {
 	for (int i = 0; i < memory->length; i++) {
 		// Make sure to check type first. Name can sometimes be unitialized.

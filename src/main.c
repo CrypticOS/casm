@@ -1,7 +1,9 @@
-// This is a simple emulator for testing programs
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "data.h"
+#include "object.h"
 #include "header.h"
 
 int main(int argc, char *argv[]) {
