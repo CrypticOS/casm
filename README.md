@@ -37,21 +37,21 @@ set a 'Z'
 ## Instructions
 | Instruction | Arguments | Note |
 |--|--|--|
-| jmp | <label> |
-| got | <variable name> | Moves the pointer to a variable. WKSP can be used to go to the workspace cell. |
+| jmp | [label] |
+| got | [variable name] | Moves the pointer to a variable. WKSP can be used to go to the workspace cell. |
 | ret | | Returns from run instruction |
-| inl | <string> | Paste CINS instruction in output |
-| prt | <string/int/char/variable> |
-| equ | <first value (string/int/char/variable)> <second value> <label to jump to> |
-| set | <variable name> <value> |
-| var | <variable name> <value> |
-| arr | <array name> <length> <initializing value (optional)> |
-| add | <variable name> <char/int> |
-| sub | <variable name> <char/int> |
-| run | <label name> | Runs a label like a function. Must use ret to go back. |
-| def | <defined name> <value> | Works the same as C #define |
-| inc | <file name, string> | Include a file, basically a copy/paste. |
-| fre | <variable name> | Free a variable from assembler's memory. (experimental, may be removed) |
+| inl | [string] | Paste CINS instruction in output |
+| prt | [string/int/char/variable] |
+| equ | [first value (string/int/char/variable)] [second value] [label to jump to] |
+| set | [variable name] [value] |
+| var | [variable name] [value] |
+| arr | [array name] [length] [initializing value (optional)] |
+| add | [variable name] [char/int] |
+| sub | [variable name] [char/int] |
+| run | [label name] | Runs a label like a function. Must use ret to go back. |
+| def | [defined name] [value] | Works the same as C #define |
+| inc | [file name, string] | Include a file, basically a copy/paste. |
+| fre | [variable name] | Free a variable from assembler's memory. (experimental, may be removed) |
 
 Etc:
 - WKSP is a built-in variable. It points to the memory cell  
