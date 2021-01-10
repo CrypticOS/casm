@@ -1,6 +1,11 @@
 #define MAX_TOK 10
 #define MAX_LINE 200
 
+// Put in header so lexer can register
+// newlines and comments as a line when
+// an error is reported
+int line;
+
 enum Types {
 	TEXT, DIGIT, STRING, LABEL,
 	VAR, ARR,

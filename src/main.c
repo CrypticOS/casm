@@ -43,7 +43,22 @@ int main(int argc, char *argv[]) {
 						if (feof(reader)) {
 							break;
 						}
-			
+
+						// If there is an error, print it and kill
+						// (errors are thrown in seperated by '#'), for
+						// when the programmer does not notice
+						if (c == '~') {
+							free(input);
+							fgetc(reader);
+							while (c != '~' || feof(reader)) {
+								putchar((char)c);
+								c = fgetc(reader);
+							}
+
+							fclose(reader);
+							return 0;
+						}
+
 						*index = (char)c;
 						index++;
 					}

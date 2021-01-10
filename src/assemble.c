@@ -13,6 +13,10 @@ FILE *readerStack[3];
 int readerPoint = 0;
 int line = 0;
 
+void printError(char error[]) {
+	printf("\n~ERR on line %d: %s~\n", line + 1, error);
+}
+
 // Free entirety of file reader stack
 void fileKill() {
 	while (readerPoint != 0) {
@@ -27,7 +31,7 @@ bool fileNext() {
 	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
 		fclose(readerStack[readerPoint]);
 		if (line == 0) {
-			puts("ERR: Skipping bad file");
+			printError("Skipping bad file");
 			readerPoint--;
 		}
 
@@ -61,7 +65,7 @@ void fileOpen(char *file) {
 	}
 	
 	if (readerStack[readerPoint] == NULL) {
-		puts("ERR: Skipping bad file included");
+		printError("Skipping bad file included");
 	}
 }
 
@@ -112,8 +116,9 @@ void got(struct Memory *memory, int place) {
 void gotVar(struct Memory *memory, char *var) {
 	int location = locateObject(memory, var, VAR);
 	if (location == -1) {
-		puts("ERROR: Variable not found.");
-		exit(0);
+		printError("Variable not found");
+		killAll(memory);
+		exit(1);
 	}
 	
 	got(memory, memory->d[location].location);
@@ -140,6 +145,13 @@ bool assemble(char *file) {
 	memory.used = 0;
 	memory.position = 0;
 
+	// Open initial file at zero.
+	readerStack[0] = fopen(file, "r");
+	if (readerStack[0] == NULL) {
+		printError("File not found");
+		return 1;
+	}
+
 	// Use ~32k ram for memory objects
 	memory.d = malloc(sizeof(struct MemObject) * 500);
 	if (memory.d == NULL) {puts("Alloc error"); return 1;}
@@ -150,16 +162,9 @@ bool assemble(char *file) {
 	memory.d[0].type = VAR;
 	memory.length++;
 	
+	// Lex through the labels/runs first.
 	struct Token tokens[MAX_TOK];
 	int labelsFound = 0;
-
-	readerStack[readerPoint] = fopen(file, "r");
-	if (readerStack[readerPoint] == NULL) {
-		puts("ERR: File not found.");
-		return 1;
-	}
-	
-	// Lex through the labels/runs first.
 	while (fileNext()) {
 		int length = lex(tokens, buffer);
 		if (length == 0) {
@@ -189,7 +194,7 @@ bool assemble(char *file) {
 	// Close and reopen to pointer
 	readerPoint = 0;
 	readerStack[readerPoint] = fopen(file, "r");
-
+	
 	// Lex regular instructions
 	line = 0;
 	while (fileNext()) {
@@ -219,8 +224,8 @@ bool assemble(char *file) {
 				if (location == -1) {
 					location = locateObject(&memory, tokens[i].text, LABEL);
 					if (location == -1) {
-						puts("ERR: Bad request for addressof.");
-						return 1;
+						printError("Bad request for addressof");
+						goto kill;
 					} else {
 						// Label
 						tokens[i].value = memory.d[location].location;
@@ -233,7 +238,15 @@ bool assemble(char *file) {
 			}
 		}
 
-		// Instruction Assembler
+		// Since every instruction starts with TEXT/LABEL,
+		// we can assume an error if it is not.
+		if (tokens[0].type != TEXT && tokens[0].type != LABEL) {
+			printf("%d", tokens[0].type);
+			printError("Expected TEXT or LABEL for first token");
+			goto kill;
+		}
+
+		// Now, assemble actual instructions
 		if (!strcmp(tokens[0].text, "def")) {
 			strcpy(memory.d[memory.length].name, tokens[1].text);
 			memory.d[memory.length].location = tokens[2].value;
@@ -328,7 +341,12 @@ bool assemble(char *file) {
 				out(".");
 			}
 		} else if (!strcmp(tokens[0].text, "inl")) {
-			out(tokens[1].text);
+			if (tokens[1].type == STRING) {
+				out(tokens[1].text);
+			} else {
+				printError("Expected STRING for INL");
+				goto kill;
+			}
 		} else if (!strcmp(tokens[0].text, "sub")) {
 			gotVar(&memory, tokens[1].text);
 
@@ -345,9 +363,8 @@ bool assemble(char *file) {
 		} else if (!strcmp(tokens[0].text, "jmp")) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
-				puts("ERR: Label not found");
-				fileKill(&memory);
-				exit(0);
+				printError("Label not found");
+				goto kill;
 			}
 
 			got(&memory, memory.used);
@@ -365,9 +382,8 @@ bool assemble(char *file) {
 			
 			int location = locateObject(&memory, tokens[3].text, LABEL);
 			if (location == -1) {
-				puts("ERR: Label not found");
-				fileKill(&memory);
-				exit(0);
+				printError("Label not found");
+				goto kill;
 			}
 
 			got(&memory, memory.used);
@@ -377,7 +393,7 @@ bool assemble(char *file) {
 			out("^"); // UP
 			out("?"); // EQU
 		} else if (!strcmp(tokens[0].text, "set")) {
-			if (tokens[2].type == TEXT) {
+			if (tokens[1].type == TEXT && tokens[2].type == TEXT) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
 				gotVar(&memory, tokens[1].text);
@@ -412,9 +428,8 @@ bool assemble(char *file) {
 			// Find label like JMP
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
-				puts("ERR: Label not found");
-				killAll(&memory);
-				exit(0);
+				printError("Label not found");
+				goto kill;
 			}
 
 			putInt(memory.d[location].location);
@@ -436,4 +451,8 @@ bool assemble(char *file) {
 
 	killAll(&memory);
 	return 0;
+	
+	kill:
+	killAll(&memory);
+	return 1;
 }

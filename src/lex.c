@@ -50,6 +50,7 @@ int lex(struct Token *tokens, char *line) {
 
 		// Check if this is a nothing line (comments, blank)
 		if (line[c] == '\n' || line[c] == '\0') {
+			line++;
 			return token;
 		}
 
