@@ -463,9 +463,13 @@ bool assemble(char *file) {
 			continue;
 		} else if (!strcmp(tokens[0].text, "fre")) {
 			int location = locateObject(&memory, tokens[1].text, VAR);
+			if (memory.d[location].type != VAR) {
+				printError("Can only free variables");
+				goto kill;
+			}
+			
 			memory.d[location].type = EMPTY;
 			memory.used--;
-			continue;
 		}
 		
 		line++;
