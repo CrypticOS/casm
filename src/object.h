@@ -7,6 +7,7 @@
 int line;
 
 enum Types {
+	EMPTY, // object is free
 	TEXT, DIGIT, STRING, LABEL,
 	VAR, ARR,
 	RUN, DEFINE, ADDRESSOF,
@@ -34,8 +35,7 @@ struct MemObject {
 // structure for simplicity.
 struct Memory {
 	struct MemObject *d;
-	int length; // How many memory objects
-	
+	int length; // How many memory objects	
 	int used; // How many memory cells used
 	int position; // Current bottom position in assembler
 };

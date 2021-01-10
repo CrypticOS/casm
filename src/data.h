@@ -12,3 +12,4 @@ static const char CASM_LOCATION[] = "/home/dan/Documents/crypticos/";
 #define MAX_BOTTOM 1000
 #define MAX_INPUT 100000
 #define MAX_LABELS 10000
+#define MAX_MEMOBJ 500

@@ -153,7 +153,7 @@ bool assemble(char *file) {
 	}
 
 	// Use ~32k ram for memory objects
-	memory.d = malloc(sizeof(struct MemObject) * 500);
+	memory.d = malloc(sizeof(struct MemObject) * MAX_MEMOBJ);
 	if (memory.d == NULL) {puts("Alloc error"); return 1;}
 
 	// Default variable WKSP. Takes no space, only
@@ -161,6 +161,10 @@ bool assemble(char *file) {
 	strcpy(memory.d[0].name, "WKSP");
 	memory.d[0].type = VAR;
 	memory.length++;
+
+	for (size_t i = 1; i < MAX_MEMOBJ; i++) {
+		memory.d[i].type = EMPTY;
+	}
 	
 	// Lex through the labels/runs first.
 	struct Token tokens[MAX_TOK];
@@ -256,12 +260,25 @@ bool assemble(char *file) {
 			got(&memory, memory.used);
 			out("|");
 		} else if (!strcmp(tokens[0].text, "var")) {
+			// Find a 
+			int location = memory.length;
+			for (int i = 0; i < memory.length; i++) {
+				if (memory.d[i].type == EMPTY) {
+					location = i;
+					break;
+				}
+			}
+		
 			// Add variable into object list
-			strcpy(memory.d[memory.length].name, tokens[1].text);
-			memory.d[memory.length].location = memory.used;
-			memory.d[memory.length].length = 1; // vars are 1 int wide
-			memory.d[memory.length].type = VAR;
-			memory.length++;
+			strcpy(memory.d[location].name, tokens[1].text);
+			memory.d[location].location = memory.used;
+			memory.d[location].length = 1; // vars are 1 int wide
+			memory.d[location].type = VAR;
+
+			// Use if we did not find an available spot
+			if (location == memory.length) {
+				memory.length++;
+			}
 
 			// Allow variables to be unitialized if no value
 			// is specified
@@ -443,6 +460,11 @@ bool assemble(char *file) {
 			out("a$"); // BACK, JMP
 		} else if (!strcmp(tokens[0].text, "inc")) {
 			fileOpen(tokens[1].text);
+			continue;
+		} else if (!strcmp(tokens[0].text, "fre")) {
+			int location = locateObject(&memory, tokens[1].text, VAR);
+			memory.d[location].type = EMPTY;
+			memory.used--;
 			continue;
 		}
 		

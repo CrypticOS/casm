@@ -8,7 +8,7 @@ detect:
     filename: "\\.casm$"
 
 rules:
-    - statement: "\\b(jmp|got|ret|inl|prt|equ|set|var|arr|add|sub|run|def|inc|put)\\b"
+    - statement: "\\b(jmp|got|ret|inl|prt|equ|set|var|arr|add|sub|run|def|inc|put|fre)\\b"
     
     # Kernel, std stuff
     - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high|WKSP)\\b"
