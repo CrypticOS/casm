@@ -1,2 +1,6 @@
-put 'A'
-prt WKSP
+jmp a
+prt 'A'
+jmp b
+a:
+prt 'B'
+b:

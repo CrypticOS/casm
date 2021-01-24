@@ -1,0 +1,17 @@
+; Passing function parameters
+var ga
+
+jmp a
+	myFunc:
+		inl "aavdd"
+		prt WKSP
+		prt ga
+	ret
+a:
+
+set WKSP 'A'
+inl "^d"
+
+set ga 'Z'
+
+run myFunc

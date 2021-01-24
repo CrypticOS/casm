@@ -191,7 +191,7 @@ bool assemble(char *file) {
 			fileOpen(tokens[1].text);
 			continue;
 		}
-		
+
 		line++;
 	}
 
@@ -250,16 +250,30 @@ bool assemble(char *file) {
 			goto kill;
 		}
 
+		// If label, it is already added.
+		if (tokens[0].type == LABEL) {
+			got(&memory, memory.used);
+			out("|");
+
+			line++;
+			continue;
+		}
+
+		int inst;
+		for (size_t i = 0; i < 15; i++) {
+			if (!strcmp(tokens[0].text, instructions[i].name)) {
+				inst = instructions[i].id;
+				break;
+			}
+		}
+
 		// Now, assemble actual instructions
 		if (!strcmp(tokens[0].text, "def")) {
 			strcpy(memory.d[memory.length].name, tokens[1].text);
 			memory.d[memory.length].location = tokens[2].value;
 			memory.d[memory.length].type = DEFINE;
 			memory.length++;
-		} else if (tokens[0].type == LABEL) {
-			got(&memory, memory.used);
-			out("|");
-		} else if (!strcmp(tokens[0].text, "var")) {
+		} else if (inst == I_VAR) {
 			// Find a 
 			int location = memory.length;
 			for (int i = 0; i < memory.length; i++) {
@@ -324,13 +338,13 @@ bool assemble(char *file) {
 					}
 				}
 			}
-		} else if (!strcmp(tokens[0].text, "got")) {
+		} else if (inst == I_GOT) {
 			if (tokens[1].type == TEXT) {
 				gotVar(&memory, tokens[1].text);
 			} else if (tokens[1].type == DIGIT) {
 				got(&memory, tokens[1].value);
 			}
-		} else if (!strcmp(tokens[0].text, "prt")) {
+		} else if (inst == I_PRT) {
 			if (tokens[1].type == STRING) {
 				got(&memory, memory.used);
 
@@ -357,14 +371,14 @@ bool assemble(char *file) {
 				putTok(&memory, &tokens[1], 1);
 				out(".");
 			}
-		} else if (!strcmp(tokens[0].text, "inl")) {
+		} else if (inst == I_INL) {
 			if (tokens[1].type == STRING) {
 				out(tokens[1].text);
 			} else {
 				printError("Expected STRING for INL");
 				goto kill;
 			}
-		} else if (!strcmp(tokens[0].text, "sub")) {
+		} else if (inst == I_SUB) {
 			gotVar(&memory, tokens[1].text);
 
 			// Since there are no %*+ for subtract, we must
@@ -374,10 +388,10 @@ bool assemble(char *file) {
 				tokens[2].value--;
 			}
 			
-		} else if (!strcmp(tokens[0].text, "add")) {
+		} else if (inst == I_ADD) {
 			gotVar(&memory, tokens[1].text);
 			putInt(tokens[2].value);
-		} else if (!strcmp(tokens[0].text, "jmp")) {
+		} else if (inst == I_JMP) {
 			int location = locateObject(&memory, tokens[1].text, LABEL);
 			if (location == -1) {
 				printError("Label not found");
@@ -389,7 +403,7 @@ bool assemble(char *file) {
 			putInt(memory.d[location].location);
 			out("^"); // UP
 			out("$"); // JMP
-		} else if (!strcmp(tokens[0].text, "equ")) {
+		} else if (inst == I_EQU) {
 			out("dd"); // Next two are needed as compare values
 			putTok(&memory, &tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
@@ -409,7 +423,7 @@ bool assemble(char *file) {
 			putInt(memory.d[location].location);
 			out("^"); // UP
 			out("?"); // EQU
-		} else if (!strcmp(tokens[0].text, "set")) {
+		} else if (inst == I_SET) {
 			if (tokens[1].type == TEXT && tokens[2].type == TEXT) {
 				gotVar(&memory, tokens[2].text);
 				out("^");
@@ -419,27 +433,23 @@ bool assemble(char *file) {
 				gotVar(&memory, tokens[1].text);
 				putTok(&memory, &tokens[2], 0);
 			}
-		} else if (!strcmp(tokens[0].text, "run")) {
+		} else if (inst == I_RUN) {
 			// Find run label
-			int i = 0;
-			while (i < memory.length) {
+			int i;
+			for (i = 0; i < memory.length; i++) {
 				// Check type and line in source code.
 				if (memory.d[i].type == RUN && memory.d[i].location == line) {
 					break;
 				}
-
-				i++;
 			}
 
 			got(&memory, memory.used); // Go back to original spot
-			
 			out("!"); // Reset current working space cell
 
 			// The label number is stored in length
 			// (doesn't make sense, but it is fine)
 			putInt(memory.d[i].length);
 			out("^d"); // UP, Next top cell
-
 			out("!"); // Reset current working space cell
 
 			// Find label like JMP
@@ -450,18 +460,16 @@ bool assemble(char *file) {
 			}
 
 			putInt(memory.d[location].location);
-
 			out("^"); // UP
 			out("$"); // JMP
-
 			out("|"); // Put the label for the run command
-		} else if (!strcmp(tokens[0].text, "ret")) {
+		} else if (inst == I_RET) {
 			got(&memory, memory.used); // Go back to original spot
 			out("a$"); // BACK, JMP
-		} else if (!strcmp(tokens[0].text, "inc")) {
+		} else if (inst == I_INC) {
 			fileOpen(tokens[1].text);
 			continue;
-		} else if (!strcmp(tokens[0].text, "fre")) {
+		} else if (inst == I_FRE) {
 			int location = locateObject(&memory, tokens[1].text, VAR);
 			if (memory.d[location].type != VAR) {
 				printError("Can only free variables");
@@ -471,7 +479,7 @@ bool assemble(char *file) {
 			memory.d[location].type = EMPTY;
 			memory.used--;
 		}
-		
+
 		line++;
 	}
 
