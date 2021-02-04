@@ -3,12 +3,12 @@
 The official assembler for CrypticOS.  
 
 ## Building
-You can configure if you want to compile with the terminal  
-or the X11 graphical emulator, by changing USE_WINDOW in header.h.  
-Of course if you wish to compile in windows, you would turn this off, and leave  
-out the `-lX11`.
-Run:  
-`cc gfx/gfx.c emulate.c assemble/lex.c assemble/assemble.c main.c -o casm -lX11`  
+```
+# Configure src/header.h (compile time settings)
+# Remove -lX11 for windows compilation
+
+cc gfx/gfx.c emulate.c assemble/lex.c assemble/assemble.c main.c -o casm -lX11
+```
 
 A brief build script is in build.sh. Modify it to your liking.
 
