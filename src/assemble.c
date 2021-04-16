@@ -7,14 +7,62 @@
 #include "data.h"
 #include "header.h"
 
-// For recursive file reader
+// Instruction table
+enum InstructionEnums {
+	I_DEF, I_VAR, I_ARR,
+	I_GOT, I_PRT, I_INL,
+	I_SUB, I_ADD, I_JMP,
+	I_EQU, I_SET, I_RUN,
+	I_RET, I_INC, I_FRE
+};
+
+static struct Instructions {
+	char name[10];
+	int id;
+}instructions[] = {
+	{"def", I_DEF},
+	{"var", I_VAR},
+	{"arr", I_ARR},
+	{"got", I_GOT},
+	{"prt", I_PRT},
+	{"inl", I_INL},
+	{"sub", I_SUB},
+	{"add", I_ADD},
+	{"jmp", I_JMP},
+	{"equ", I_EQU},
+	{"set", I_SET},
+	{"run", I_RUN},
+	{"ret", I_RET},
+	{"inc", I_INC},
+	{"fre", I_FRE}
+};
+
+#define INSTRUCTION_LENGTH sizeof(instructions) / sizeof(instructions[0])
+
+// Recursive file reader variables
 char buffer[MAX_LINE];
 FILE *readerStack[3];
 int readerPoint = 0;
-int line = 0;
+
+struct Memory memory;
+
+// Main instruction out function
+// (send to stdout for now)
+void out(char *string) {
+	while (*string != '\0') {
+		putchar(*string);
+		string++;
+	}
+}
 
 void printError(char error[]) {
-	printf("\n~ERR on line %d: %s~\n", line + 1, error);
+	// Only put '\n' if output
+	// has been given
+	if (line != 0) {
+		putchar('\n');
+	}
+	
+	printf("~ERR on line %d: %s~", line + 1, error);
 }
 
 // Free entirety of file reader stack
@@ -54,7 +102,7 @@ void fileOpen(char *file) {
 	line++; // To skip to line after inc
 	readerPoint++;
 
-	// '$' is library location
+	// Note: '$' is library location
 	if (file[0] == '$') {
 		char location[128];
 		strcpy(location, CASM_LOCATION);
@@ -69,22 +117,17 @@ void fileOpen(char *file) {
 	}
 }
 
-void killAll(struct Memory *memory) {
-	free(memory->d);
+void killAll() {
+	free(memory.d);
 	fileKill();
 }
 
-// Main instruction out function
-void out(char *string) {
-	while (*string != '\0') {
-		putchar(*string);
-		string++;
-	}
-}
-
 void putInt(int value) {
+	// Optimize 48 as
+	// !%--, not
+	// !*********+++
 	while (value != 0) {
-		if (value >= 50) {
+		if (value >= 45) {
 			out("%");
 			value -= 50;
 		} else if (value >= 5) {
@@ -94,58 +137,75 @@ void putInt(int value) {
 			out("+");
 			value--;
 		}
+
+		while (value < 0) {
+			out("-");
+			value++;
+		}
 	}
+}
+
+// Locate variable, array, label, from objects in memory from type
+int locateObject(char *name, int type) {
+	for (int i = 0; i < memory.length; i++) {
+		// Make sure to check type first. Name can sometimes be unitialized.
+		if (memory.d[i].type == type && !strcmp(memory.d[i].name, name)) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 // Go to a specific spot in memory
-void got(struct Memory *memory, int place) {
-	if (place > memory->position) {
-		while (place != memory->position) {
+void got(int place) {
+	if (place > memory.position) {
+		while (place != memory.position) {
 			out(">");
-			memory->position++;
+			memory.position++;
 		}
-	} else if (place < memory->position) {
-		while (place != memory->position) {
+	} else if (place < memory.position) {
+		while (place != memory.position) {
 			out("<");
-			memory->position--;
+			memory.position--;
 		}
 	}
 }
 
-// Goto a variable location.
-void gotVar(struct Memory *memory, char *var) {
-	int location = locateObject(memory, var, VAR);
+// Move to location of variable
+void gotVar(char *var) {
+	int location = locateObject(var, VAR);
 	if (location == -1) {
 		printError("Variable not found");
-		killAll(memory);
+		killAll();
 		exit(1);
 	}
 	
-	got(memory, memory->d[location].location);
+	got(memory.d[location].location);
 }
 
 // Put/got a token, ready for "^" to be used.
-void putTok(struct Memory *memory, struct Token *token, bool reset) {
+void putTok(struct Token *token, bool reset) {
 	if (token->type == DIGIT) {
 		if (reset) {
-			got(memory, memory->used);
+			got(memory.used);
 		}
 		
 		out("!");
 		putInt(token->value);
 	} else if (token->type == TEXT) {
-		gotVar(memory, token->text);
+		gotVar(token->text);
 	}
 }
 
 // Return 0/1 for good/bad assemble
-bool assemble(char *file) {
-	struct Memory memory;
+int assemble(char *file, bool clean) {
 	memory.length = 0;
 	memory.used = 0;
 	memory.position = 0;
 
 	// Open initial file at zero.
+	// (first, before allocations)
 	readerStack[0] = fopen(file, "r");
 	if (readerStack[0] == NULL) {
 		printError("File not found");
@@ -215,7 +275,7 @@ bool assemble(char *file) {
 		// with their values, replace
 		for (int i = 0; i < length; i++) {
 			if (tokens[i].type == TEXT) {
-				int tryDef = locateObject(&memory, tokens[i].text, DEFINE);
+				int tryDef = locateObject(tokens[i].text, DEFINE);
 				if (tryDef != -1) {
 					tokens[i].type = DIGIT;
 					tokens[i].value = memory.d[tryDef].location;
@@ -224,9 +284,9 @@ bool assemble(char *file) {
 				// For variables get location, for labels get ID
 				// (occurence in output file)
 				tokens[i].type = DIGIT;
-				int location = locateObject(&memory, tokens[i].text, VAR);
+				int location = locateObject(tokens[i].text, VAR);
 				if (location == -1) {
-					location = locateObject(&memory, tokens[i].text, LABEL);
+					location = locateObject(tokens[i].text, LABEL);
 					if (location == -1) {
 						printError("Bad request for addressof");
 						goto kill;
@@ -252,7 +312,7 @@ bool assemble(char *file) {
 
 		// If label, it is already added.
 		if (tokens[0].type == LABEL) {
-			got(&memory, memory.used);
+			got(memory.used);
 			out("|");
 
 			line++;
@@ -260,7 +320,7 @@ bool assemble(char *file) {
 		}
 
 		int inst;
-		for (size_t i = 0; i < 15; i++) {
+		for (size_t i = 0; i < INSTRUCTION_LENGTH; i++) {
 			if (!strcmp(tokens[0].text, instructions[i].name)) {
 				inst = instructions[i].id;
 				break;
@@ -299,7 +359,7 @@ bool assemble(char *file) {
 			if (length != 2) {
 				// Go to the variable's spot in memory
 				// In order to add value to it.
-				got(&memory, memory.used);
+				got(memory.used);
 				out("!"); // Reset unitialized value
 				putInt(tokens[2].value);
 			}
@@ -340,13 +400,13 @@ bool assemble(char *file) {
 			}
 		} else if (inst == I_GOT) {
 			if (tokens[1].type == TEXT) {
-				gotVar(&memory, tokens[1].text);
+				gotVar(tokens[1].text);
 			} else if (tokens[1].type == DIGIT) {
-				got(&memory, tokens[1].value);
+				got(tokens[1].value);
 			}
 		} else if (inst == I_PRT) {
 			if (tokens[1].type == STRING) {
-				got(&memory, memory.used);
+				got(memory.used);
 
 				// The string printing algorithm is enhanced and optimized.
 				for (size_t i = 0; tokens[1].text[i] != '\0'; i++) {
@@ -368,7 +428,7 @@ bool assemble(char *file) {
 					out(".");
 				}
 			} else {
-				putTok(&memory, &tokens[1], 1);
+				putTok(&tokens[1], 1);
 				out(".");
 			}
 		} else if (inst == I_INL) {
@@ -379,7 +439,7 @@ bool assemble(char *file) {
 				goto kill;
 			}
 		} else if (inst == I_SUB) {
-			gotVar(&memory, tokens[1].text);
+			gotVar(tokens[1].text);
 
 			// Since there are no %*+ for subtract, we must
 			// do solely -s instead.
@@ -389,35 +449,35 @@ bool assemble(char *file) {
 			}
 			
 		} else if (inst == I_ADD) {
-			gotVar(&memory, tokens[1].text);
+			gotVar(tokens[1].text);
 			putInt(tokens[2].value);
 		} else if (inst == I_JMP) {
-			int location = locateObject(&memory, tokens[1].text, LABEL);
+			int location = locateObject(tokens[1].text, LABEL);
 			if (location == -1) {
 				printError("Label not found");
 				goto kill;
 			}
 
-			got(&memory, memory.used);
+			got(memory.used);
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
 			out("^"); // UP
 			out("$"); // JMP
 		} else if (inst == I_EQU) {
 			out("dd"); // Next two are needed as compare values
-			putTok(&memory, &tokens[1], 1);
+			putTok(&tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
 			
-			putTok(&memory, &tokens[2], 1);
+			putTok(&tokens[2], 1);
 			out("^a"); // UP, from second to first compare value
 			
-			int location = locateObject(&memory, tokens[3].text, LABEL);
+			int location = locateObject( tokens[3].text, LABEL);
 			if (location == -1) {
 				printError("Label not found");
 				goto kill;
 			}
 
-			got(&memory, memory.used);
+			got(memory.used);
 
 			out("!"); // Reset current working space cell
 			putInt(memory.d[location].location);
@@ -425,13 +485,13 @@ bool assemble(char *file) {
 			out("?"); // EQU
 		} else if (inst == I_SET) {
 			if (tokens[1].type == TEXT && tokens[2].type == TEXT) {
-				gotVar(&memory, tokens[2].text);
+				gotVar(tokens[2].text);
 				out("^");
-				gotVar(&memory, tokens[1].text);
+				gotVar(tokens[1].text);
 				out("v");
 			} else {
-				gotVar(&memory, tokens[1].text);
-				putTok(&memory, &tokens[2], 0);
+				gotVar(tokens[1].text);
+				putTok(&tokens[2], 0);
 			}
 		} else if (inst == I_RUN) {
 			// Find run label
@@ -443,7 +503,7 @@ bool assemble(char *file) {
 				}
 			}
 
-			got(&memory, memory.used); // Go back to original spot
+			got(memory.used); // Go back to original spot
 			out("!"); // Reset current working space cell
 
 			// The label number is stored in length
@@ -453,7 +513,7 @@ bool assemble(char *file) {
 			out("!"); // Reset current working space cell
 
 			// Find label like JMP
-			int location = locateObject(&memory, tokens[1].text, LABEL);
+			int location = locateObject(tokens[1].text, LABEL);
 			if (location == -1) {
 				printError("Label not found");
 				goto kill;
@@ -464,13 +524,13 @@ bool assemble(char *file) {
 			out("$"); // JMP
 			out("|"); // Put the label for the run command
 		} else if (inst == I_RET) {
-			got(&memory, memory.used); // Go back to original spot
+			got(memory.used); // Go back to original spot
 			out("a$"); // BACK, JMP
 		} else if (inst == I_INC) {
 			fileOpen(tokens[1].text);
 			continue;
 		} else if (inst == I_FRE) {
-			int location = locateObject(&memory, tokens[1].text, VAR);
+			int location = locateObject(tokens[1].text, VAR);
 			if (memory.d[location].type != VAR) {
 				printError("Can only free variables");
 				goto kill;
@@ -481,6 +541,9 @@ bool assemble(char *file) {
 		}
 
 		line++;
+		if (clean) {
+			out("\n");
+		}
 	}
 
 	killAll(&memory);

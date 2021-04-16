@@ -4,7 +4,7 @@
 // Put in header so lexer can register
 // newlines and comments as a line when
 // an error is reported
-int line;
+static int line = 0;
 
 enum Types {
 	EMPTY, // object is free

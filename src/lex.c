@@ -19,37 +19,25 @@ int isDigit(char c) {
 	}
 }
 
-// Locate variable, array, label, from objects in memory from type
-int locateObject(struct Memory *memory, char *name, int type) {
-	for (int i = 0; i < memory->length; i++) {
-		// Make sure to check type first. Name can sometimes be unitialized.
-		if (memory->d[i].type == type && !strcmp(memory->d[i].name, name)) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-
 // Lex single line, then quit
-int lex(struct Token *tokens, char *line) {
+int lex(struct Token *tokens, char *string) {
 	int c = 0;
 	int token = 0;
-	while (line[c] != '\0') {
+	while (string[c] != '\0') {
 		// Skip chars
-		while (line[c] == ' ' || line[c] == '\t') {
+		while (string[c] == ' ' || string[c] == '\t') {
 			c++;
 		}
 
 		// Skip comments
-		if (line[c] == ';') {
-			while (line[c] != '\n' || line[c] == '\0') {
+		if (string[c] == ';') {
+			while (string[c] != '\n' || string[c] == '\0') {
 				c++;
 			}
 		}
 
 		// Check if this is a nothing line (comments, blank)
-		if (line[c] == '\n' || line[c] == '\0') {
+		if (string[c] == '\n' || string[c] == '\0') {
 			line++;
 			return token;
 		}
@@ -58,46 +46,46 @@ int lex(struct Token *tokens, char *line) {
 		tokens[token].type = 0;
 		tokens[token].value = 0;
 		
-		if (isAlpha(line[c])) {
+		if (isAlpha(string[c])) {
 			tokens[token].type = TEXT;
-			while (isAlpha(line[c])) {
-				tokens[token].text[tokens[token].length] = line[c];
+			while (isAlpha(string[c])) {
+				tokens[token].text[tokens[token].length] = string[c];
 				tokens[token].length++;
 
 				c++;
 			}
 
-			if (line[c] == ':') {
+			if (string[c] == ':') {
 				tokens[token].type = LABEL;
 				c++;
 			}
-		} else if (isDigit(line[c])) {
+		} else if (isDigit(string[c])) {
 			tokens[token].type = DIGIT;
-			while (isDigit(line[c])) {
+			while (isDigit(string[c])) {
 				tokens[token].value *= 10;
-				tokens[token].value += (line[c] - '0');
+				tokens[token].value += (string[c] - '0');
 				c++;
 			}
-		} else if (line[c] == '\'') {
+		} else if (string[c] == '\'') {
 			tokens[token].type = DIGIT;
 			c++;
-			tokens[token].value = line[c];
+			tokens[token].value = string[c];
 			c += 2; // Skip ' and goto next char
-		} else if (line[c] == '[') {
+		} else if (string[c] == '[') {
 			tokens[token].type = ADDRESSOF;
 			c++;
-			while (line[c] != ']') {
-				tokens[token].text[tokens[token].length] = line[c];
+			while (string[c] != ']') {
+				tokens[token].text[tokens[token].length] = string[c];
 				tokens[token].length++;
 				c++;
 			}
 
 			c++; // Skip ]
-		} else if (line[c] == '"') {
+		} else if (string[c] == '"') {
 			tokens[token].type = STRING;
 			c++; // Skip "
-			while (line[c] != '"') {
-				tokens[token].text[tokens[token].length] = line[c];
+			while (string[c] != '"') {
+				tokens[token].text[tokens[token].length] = string[c];
 				tokens[token].length++;
 				c++;
 			}
