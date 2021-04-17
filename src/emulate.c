@@ -136,7 +136,7 @@ int run(char *file, char *keys) {
 			#endif	
 			break;
 		case ',':
-			if (keys == NULL) {
+			if (keys != NULL) {
 				// Don't allow characters after null terminator to be
 				// read
 				if (get != 0 && keys[get - 1] == '\0') {

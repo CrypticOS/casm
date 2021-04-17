@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 			"Usage:\n" \
 			"\tcasm -a <code.casm>\tAssemble a file\n" \
 			"\tcasm -r <outputfile>\tRun an output file\n" \
-			"\tcasm -a <outputfile> -i \"Input\"\tOverride key input with string"
+			"\tcasm -a <outputfile> -i \"Input\"\tOverride key input with string\n"
 			"Examples:\n" \
 			"\tcasm -a foo.casm > a.out && casm -r a.out"
 		);
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Note that we parse backwards.
-	char *inputKeys = NULL;
+	char *inputKeys = 0;
 	while (argc != 0) {
 		argc--;
 		if (argv[argc][0] == '-') {

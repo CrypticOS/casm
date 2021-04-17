@@ -72,7 +72,7 @@ int fileNext() {
 		} else {
 			readerPoint--;
 
-			// Recursively call to skip include
+			// Recursively jump to skip include
 			// (We don't want a return value)
 			goto fileNext_top;
 		}
@@ -98,6 +98,7 @@ void fileOpen(char *file) {
 	
 	if (readerStack[readerPoint] == NULL) {
 		printError("Skipping bad file included");
+		readerPoint--;
 	}
 }
 

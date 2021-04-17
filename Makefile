@@ -1,5 +1,5 @@
 WINDOW ?= 0
-INCLUDE ?= /home/daniel/Documents/crypticos/
+INCLUDE ?= /home/daniel/Documents/crypticos
 
 CC := gcc
 CFLAGS := -Wall -D EMULATOR_WINDOW=$(WINDOW) -D CASM_LOCATION='"$(INCLUDE)"'
@@ -7,7 +7,7 @@ CFLAGS := -Wall -D EMULATOR_WINDOW=$(WINDOW) -D CASM_LOCATION='"$(INCLUDE)"'
 default: all
 
 help:
-	@echo "make WINDOW=0 INCLUDE=~/Documents/cryptic"
+	@echo "make WINDOW=0 INCLUDE=~/Documents/crypticos"
 
 all:
 	@cd src; $(CC) $(CFLAGS) gfx/gfx.c \
