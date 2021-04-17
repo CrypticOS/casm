@@ -30,6 +30,9 @@ int readerPoint = 0;
 
 struct Memory memory;
 
+char *casmLocationS = CASM_LOCATION;
+int line = 0;
+
 // Main instruction out function
 // (send to stdout for now)
 void out(char *string) {
@@ -89,7 +92,7 @@ void fileOpen(char *file) {
 	// Note: '$' is library location
 	if (file[0] == '$') {
 		char location[128];
-		strcpy(location, CASM_LOCATION);
+		strcpy(location, casmLocationS);
 		strcat(location, file + 1);
 		readerStack[readerPoint] = fopen(location, "r");
 	} else {

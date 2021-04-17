@@ -35,6 +35,9 @@ int main(int argc, char *argv[]) {
 			case 'i':
 				inputKeys = argv[argc + 1];
 				break;
+			case 'l':
+				casmLocationS = argv[argc + 1];
+				break;
 			case 'r':
 				return run(argv[argc + 1], inputKeys);
 			case 'a':

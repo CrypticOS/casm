@@ -1,5 +1,5 @@
 WINDOW ?= 0
-INCLUDE ?= /home/daniel/Documents/crypticos
+INCLUDE ?= $(shell echo ~/Documents/crypticos/)
 
 CC := gcc
 CFLAGS := -Wall -D EMULATOR_WINDOW=$(WINDOW) -D CASM_LOCATION='"$(INCLUDE)"'

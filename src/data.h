@@ -3,6 +3,8 @@
 	#define CASM_LOCATION "/home/dan/Documents/crypticos/"
 #endif
 
+extern char *casmLocationS;
+
 // Whether to compile with in a X11 windowed
 // environment or not.
 #ifndef EMULATOR_WINDOW

@@ -1,10 +1,7 @@
 #define MAX_TOK 10
 #define MAX_LINE 200
 
-// Put in header so lexer can register
-// newlines and comments as a line when
-// an error is reported
-static int line = 0;
+extern int line;
 
 enum Types {
 	EMPTY, // object is free
