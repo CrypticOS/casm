@@ -58,22 +58,22 @@ int run(char *file, char *keys) {
 	if (memtop == NULL) {puts("Alloc err"); return 1;}
 	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
 	if (membottom == NULL) {free(memtop); puts("Alloc err"); return 1;}
-	int *labels = malloc(sizeof(size_t) * MAX_LABELS);
+	int *labels = malloc(sizeof(int) * MAX_LABELS);
 	if (labels == NULL) {free(memtop); free(membottom); puts("Alloc err"); return 1;}
 
 	unsigned short *topp = memtop;
 	unsigned short *bottomp = membottom;
 
 	// Locate labels
-	size_t l = 0;
-	for (size_t c = 0; input[c] != '\0'; c++) {
+	int l = 0;
+	for (int c = 0; input[c] != '\0'; c++) {
 		if (input[c] == '|') {
 			labels[l] = c;
 			l++;
 		}
 	}
 
-	size_t get = 0;
+	int get = 0;
 	for (int c = 0; input[c] != '\0'; c++) {
 		switch (input[c]) {
 		case '|':
@@ -174,7 +174,7 @@ int run(char *file, char *keys) {
 		case '#':
 			puts("\nHalting program.");
 			puts("Dumping 100 memory cells from bottom...");
-			for (size_t i = 0; i < 100; i++) {
+			for (int i = 0; i < 100; i++) {
 				printf("%d ", membottom[i]);
 			}
 

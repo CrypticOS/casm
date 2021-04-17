@@ -17,7 +17,7 @@ enum Types {
 struct Token {
 	char text[100];
 	int value;
-	size_t length;
+	int length;
 	int type;
 };
 
@@ -32,7 +32,7 @@ struct MemObject {
 
 // Labels, calls, variables, are all
 // stored as memory objects in the same
-// structure for simplicity.
+// structure for simplicity and ease.
 struct Memory {
 	struct MemObject *d;
 	int length; // How many memory objects	

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "object.h"
 #include "data.h"
@@ -74,7 +73,7 @@ void fileKill() {
 }
 
 // Check end of current file
-bool fileNext() {
+int fileNext() {
 	fileNext_top:
 	if (fgets(buffer, MAX_LINE, readerStack[readerPoint]) == NULL) {
 		fclose(readerStack[readerPoint]);
@@ -185,7 +184,7 @@ void gotVar(char *var) {
 }
 
 // Put/got a token, ready for "^" to be used.
-void putTok(struct Token *token, bool reset) {
+void putTok(struct Token *token, int reset) {
 	if (token->type == DIGIT) {
 		if (reset) {
 			got(memory.used);
@@ -199,7 +198,7 @@ void putTok(struct Token *token, bool reset) {
 }
 
 // Return 0/1 for good/bad assemble
-int assemble(char *file, bool clean) {
+int assemble(char *file, int clean) {
 	memory.length = 0;
 	memory.used = 0;
 	memory.position = 0;

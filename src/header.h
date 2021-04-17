@@ -1,5 +1,5 @@
 int run(char *file, char *keys);
-int assemble(char *file, bool clean);
+int assemble(char *file, int clean);
 
 int isAlpha(char c);
 int isDigit(char c);

@@ -1,11 +1,13 @@
 // What to replace '$' with at start of file names
-static const char CASM_LOCATION[] = "/home/dan/Documents/crypticos/";
+#ifndef CASM_LOCATION
+	#define CASM_LOCATION "/home/dan/Documents/crypticos/"
+#endif
 
 // Whether to compile with in a X11 windowed
-// emulator or not.
-#define EMULATOR_WINDOW 1
-
-
+// environment or not.
+#ifndef EMULATOR_WINDOW
+	#define EMULATOR_WINDOW 0
+#endif
 
 // Emulator sizes to allocate
 // Will allocate 120kb memory.
