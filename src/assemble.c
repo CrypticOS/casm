@@ -7,36 +7,21 @@
 #include "header.h"
 
 // Instruction table
-enum InstructionEnums {
-	I_DEF, I_VAR, I_ARR,
-	I_GOT, I_PRT, I_INL,
-	I_SUB, I_ADD, I_JMP,
-	I_EQU, I_SET, I_RUN,
-	I_RET, I_INC, I_FRE
-};
-
-static struct Instructions {
-	char name[10];
-	int id;
-}instructions[] = {
-	{"def", I_DEF},
-	{"var", I_VAR},
-	{"arr", I_ARR},
-	{"got", I_GOT},
-	{"prt", I_PRT},
-	{"inl", I_INL},
-	{"sub", I_SUB},
-	{"add", I_ADD},
-	{"jmp", I_JMP},
-	{"equ", I_EQU},
-	{"set", I_SET},
-	{"run", I_RUN},
-	{"ret", I_RET},
-	{"inc", I_INC},
-	{"fre", I_FRE}
-};
-
-#define INSTRUCTION_LENGTH sizeof(instructions) / sizeof(instructions[0])
+#define I_DEF "def"
+#define I_VAR "var"
+#define I_ARR "arr"
+#define I_GOT "got"
+#define I_PRT "prt"
+#define I_INL "inl"
+#define I_SUB "sub"
+#define I_ADD "add"
+#define I_JMP "jmp"
+#define I_EQU "equ"
+#define I_SET "set"
+#define I_RUN "run"
+#define I_RET "ret"
+#define I_INC "inc"
+#define I_FRE "fre"
 
 // Recursive file reader variables
 char buffer[MAX_LINE];
@@ -318,21 +303,13 @@ int assemble(char *file, int clean) {
 			continue;
 		}
 
-		int inst;
-		for (size_t i = 0; i < INSTRUCTION_LENGTH; i++) {
-			if (!strcmp(tokens[0].text, instructions[i].name)) {
-				inst = instructions[i].id;
-				break;
-			}
-		}
-
 		// Now, assemble actual instructions
-		if (!strcmp(tokens[0].text, "def")) {
+		if (!strcmp(tokens[0].text, I_DEF)) {
 			strcpy(memory.d[memory.length].name, tokens[1].text);
 			memory.d[memory.length].location = tokens[2].value;
 			memory.d[memory.length].type = DEFINE;
 			memory.length++;
-		} else if (inst == I_VAR) {
+		} else if (!strcmp(tokens[0].text, I_VAR)) {
 			// Find a 
 			int location = memory.length;
 			for (int i = 0; i < memory.length; i++) {
@@ -397,13 +374,13 @@ int assemble(char *file, int clean) {
 					}
 				}
 			}
-		} else if (inst == I_GOT) {
+		} else if (!strcmp(tokens[0].text, I_GOT)) {
 			if (tokens[1].type == TEXT) {
 				gotVar(tokens[1].text);
 			} else if (tokens[1].type == DIGIT) {
 				got(tokens[1].value);
 			}
-		} else if (inst == I_PRT) {
+		} else if (!strcmp(tokens[0].text, I_PRT)) {
 			if (tokens[1].type == STRING) {
 				got(memory.used);
 
@@ -430,14 +407,14 @@ int assemble(char *file, int clean) {
 				putTok(&tokens[1], 1);
 				out(".");
 			}
-		} else if (inst == I_INL) {
+		} else if (!strcmp(tokens[0].text, I_INL)) {
 			if (tokens[1].type == STRING) {
 				out(tokens[1].text);
 			} else {
 				printError("Expected STRING for INL");
 				goto kill;
 			}
-		} else if (inst == I_SUB) {
+		} else if (!strcmp(tokens[0].text, I_SUB)) {
 			gotVar(tokens[1].text);
 
 			// Since there are no %*+ for subtract, we must
@@ -447,10 +424,10 @@ int assemble(char *file, int clean) {
 				tokens[2].value--;
 			}
 			
-		} else if (inst == I_ADD) {
+		} else if (!strcmp(tokens[0].text, I_ADD)) {
 			gotVar(tokens[1].text);
 			putInt(tokens[2].value);
-		} else if (inst == I_JMP) {
+		} else if (!strcmp(tokens[0].text, I_JMP)) {
 			int location = locateObject(tokens[1].text, LABEL);
 			if (location == -1) {
 				printError("Label not found");
@@ -462,7 +439,7 @@ int assemble(char *file, int clean) {
 			putInt(memory.d[location].location);
 			out("^"); // UP
 			out("$"); // JMP
-		} else if (inst == I_EQU) {
+		} else if (!strcmp(tokens[0].text, I_EQU)) {
 			out("dd"); // Next two are needed as compare values
 			putTok(&tokens[1], 1);
 			out("^a"); // UP, from second to first compare value
@@ -482,7 +459,7 @@ int assemble(char *file, int clean) {
 			putInt(memory.d[location].location);
 			out("^"); // UP
 			out("?"); // EQU
-		} else if (inst == I_SET) {
+		} else if (!strcmp(tokens[0].text, I_SET)) {
 			if (tokens[1].type == TEXT && tokens[2].type == TEXT) {
 				gotVar(tokens[2].text);
 				out("^");
@@ -492,7 +469,7 @@ int assemble(char *file, int clean) {
 				gotVar(tokens[1].text);
 				putTok(&tokens[2], 0);
 			}
-		} else if (inst == I_RUN) {
+		} else if (!strcmp(tokens[0].text, I_RUN)) {
 			// Find run label
 			int i;
 			for (i = 0; i < memory.length; i++) {
@@ -522,13 +499,13 @@ int assemble(char *file, int clean) {
 			out("^"); // UP
 			out("$"); // JMP
 			out("|"); // Put the label for the run command
-		} else if (inst == I_RET) {
+		} else if (!strcmp(tokens[0].text, I_RET)) {
 			got(memory.used); // Go back to original spot
 			out("a$"); // BACK, JMP
-		} else if (inst == I_INC) {
+		} else if (!strcmp(tokens[0].text, I_INC)) {
 			fileOpen(tokens[1].text);
 			continue;
-		} else if (inst == I_FRE) {
+		} else if (!strcmp(tokens[0].text, I_FRE)) {
 			int location = locateObject(tokens[1].text, VAR);
 			if (memory.d[location].type != VAR) {
 				printError("Can only free variables");
