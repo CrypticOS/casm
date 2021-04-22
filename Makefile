@@ -1,21 +1,26 @@
-WINDOW ?= 0
-INCLUDE ?= $(shell echo ~/Documents/crypticos/)
+INCLUDE ?= $(shell echo ~/Documents/crypticos)/
+FILE := emulate.c \
+		lex.c \
+		assemble.c \
+		main.c
 
 CC := gcc
-CFLAGS := -Wall -D EMULATOR_WINDOW=$(WINDOW) -D CASM_LOCATION='"$(INCLUDE)"'
+CFLAGS := -Wall -D CASM_LOCATION='"$(INCLUDE)"'
 
 default: all
 
 help:
-	@echo "make WINDOW=0 INCLUDE=~/Documents/crypticos"
+	@echo "make INCLUDE=~/Documents/crypticos"
 
 all:
-	@cd src; $(CC) $(CFLAGS) gfx/gfx.c \
-		emulate.c \
-		lex.c \
-		assemble.c \
-		main.c \
-		-o ../casm -lX11
+	@cd src; $(CC) $(CFLAGS) \
+		$(FILE) \
+		-o ../casm -D EMULATOR_WINDOW=0
+
+allGfx:
+	@cd src; $(CC) $(CFLAGS) \
+		$(FILE) \
+		-o ../casm -lX11 -D EMULATOR_WINDOW=1
 
 micro:
 	cp casm.yaml ~/.config/micro/syntax
