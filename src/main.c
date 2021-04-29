@@ -19,11 +19,11 @@ int main(int argc, char *argv[]) {
 			"\tcasm -a foo.casm > a.out && casm -r a.out"
 		);
 
-		#if EMULATOR_WINDOW == 1
+		#ifdef EMULATOR_WINDOW
 			puts("Compiled with X11 Windowed Emulator.");
 		#endif
 
-		printf("Include Directory: %s\n", CASM_LOCATION);
+		printf("Library Directory: %s\n", CASM_LOCATION);
 	}
 
 	// Note that we parse backwards.

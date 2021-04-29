@@ -4,7 +4,7 @@
 
 #include "data.h"
 
-#if EMULATOR_WINDOW
+#ifdef EMULATOR_WINDOW
 	#include "gfx/gfx.h"
 #endif
 
@@ -48,7 +48,7 @@ int run(char *file, char *keys) {
 	*index = '\0';
 	fclose(reader);
 
-	#if EMULATOR_WINDOW
+	#ifdef EMULATOR_WINDOW
 		struct gfx_window window = gfx_open(640, 480, "CrypticOS Emulator");
 		struct gfx_interaction ia;
 		gfx_setColor(&window, 255, 0, 0);
@@ -121,7 +121,7 @@ int run(char *file, char *keys) {
 			(*bottomp)--;
 			break;
 		case '.':
-			#if EMULATOR_WINDOW
+			#ifdef EMULATOR_WINDOW
 				// Manage standard OUT instructions, for graphics.
 				switch (*topp) {
 				case 0: // WRITE_PIXEL
@@ -150,7 +150,7 @@ int run(char *file, char *keys) {
 				continue;
 			}
 			
-			#if EMULATOR_WINDOW
+			#ifdef EMULATOR_WINDOW
 				ia = gfx_event();
 				while (ia.type != KEY) {
 					ia = gfx_event(&window);
@@ -185,7 +185,7 @@ int run(char *file, char *keys) {
 	endAll:
 
 	// Handle end of window event
-	#if EMULATOR_WINDOW
+	#ifdef EMULATOR_WINDOW
 		puts("Program finished. Press Q to exit.");
 		while (1) {
 			ia = gfx_event(&window);

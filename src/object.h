@@ -1,3 +1,6 @@
+#ifndef __OBJECT
+#define __OBJECT
+
 #define MAX_TOK 10
 #define MAX_LINE 200
 
@@ -36,3 +39,5 @@ struct Memory {
 	int used; // How many memory cells used
 	int position; // Current bottom position in assembler
 };
+
+#endif

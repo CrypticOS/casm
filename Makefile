@@ -5,7 +5,7 @@ FILE := emulate.c \
 		main.c
 
 CC := gcc
-CFLAGS := -Wall -D CASM_LOCATION='"$(INCLUDE)"'
+CFLAGS := -Wall
 
 default: all
 
@@ -15,12 +15,12 @@ help:
 all:
 	@cd src; $(CC) $(CFLAGS) \
 		$(FILE) \
-		-o ../casm -D EMULATOR_WINDOW=0
+		-o ../casm
 
 allGfx:
 	@cd src; $(CC) $(CFLAGS) \
 		$(FILE) \
-		-o ../casm -lX11 -D EMULATOR_WINDOW=1
+		-o ../casm -lX11 -D EMULATOR_WINDOW
 
 micro:
 	cp casm.yaml ~/.config/micro/syntax

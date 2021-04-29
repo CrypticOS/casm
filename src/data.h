@@ -1,3 +1,6 @@
+#ifndef __DATA
+#define __DATA
+
 // What to replace '$' with at start of file names
 #ifndef CASM_LOCATION
 	#define CASM_LOCATION "/home/dan/Documents/crypticos/"
@@ -5,14 +8,8 @@
 
 extern char *casmLocationS;
 
-// Whether to compile with in a X11 windowed
-// environment or not.
-#ifndef EMULATOR_WINDOW
-	#define EMULATOR_WINDOW 0
-#endif
-
 // Emulator sizes to allocate
-// Will allocate 120kb memory.
+// Will allocate ~120kb memory.
 #define MAX_TOP 100
 #define MAX_BOTTOM 1000
 #define MAX_INPUT 100000
@@ -21,3 +18,4 @@ extern char *casmLocationS;
 // Max memory objects (labels, vars, arrs)
 #define MAX_MEMOBJ 500
 
+#endif

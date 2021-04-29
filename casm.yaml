@@ -10,8 +10,8 @@ detect:
 rules:
     - statement: "\\b(jmp|got|ret|inl|prt|equ|set|var|arr|add|sub|run|def|inc|put|fre)\\b"
     
-    # Kernel, std stuff
-    - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high|WKSP)\\b"
+    # Kernel functions
+    - preproc: "\\b(k.add|k.mov|k.sub|k.mult|k.div|k.high|k.movf|WKSP)\\b"
     - identifier: "\\b(ga|gb|gc|gd|gr)\\b"
     
     - identifier: "[a-zA-Z_.]+:"
