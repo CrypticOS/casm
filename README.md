@@ -4,13 +4,9 @@ The official assembler for CrypticOS.
 
 ## Building
 ```
-# Configure src/header.h (compile time settings)
-# Remove -lX11 for windows compilation
-
-cc gfx/gfx.c emulate.c assemble/lex.c assemble/assemble.c main.c -o casm -lX11
+# Needs C99 compiler
+make
 ```
-
-A brief build script is in build.sh. Modify it to your liking.
 
 ## Syntax
 CASM is based on a stripped down version of the NASM Syntax.  
