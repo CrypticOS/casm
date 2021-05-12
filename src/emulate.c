@@ -8,8 +8,6 @@
 	#include "gfx/gfx.h"
 #endif
 
-int x = 0;
-
 // NOTE: unused parameter expected if
 // compiled with windowed mode
 int run(char *file, char *keys) {
@@ -159,7 +157,8 @@ int run(char *file, char *keys) {
 			#else
 				// Switch between regular and raw input modes.
 				system("/bin/stty raw");
-				*bottomp = getchar();					
+				*bottomp = getchar();
+				putchar(8); // Literally print backspace, delete the char
 				system("/bin/stty cooked");
 
 				// ESC kill.
@@ -171,8 +170,6 @@ int run(char *file, char *keys) {
 
 		// Debug char
 		case '#':
-			x++;
-			if (x != 1) {break;}
 			puts("\nHalting program.");
 			puts("Dumping 100 memory cells from bottom...");
 			for (int i = 0; i < 100; i++) {

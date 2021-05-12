@@ -1,1 +1,5 @@
-arr board 9 '-'
+#define FOO 2
+
+#ifdef FOO
+	var a FOO
+#end

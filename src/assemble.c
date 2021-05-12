@@ -6,8 +6,13 @@
 #include "data.h"
 #include "header.h"
 
+// Preprocessor
+#define P_DEFINE "define"
+#define P_IFDEF "ifdef"
+#define P_IFNDEF "ifndef"
+#define P_END "end"
+
 // Instruction table
-#define I_DEF "def"
 #define I_VAR "var"
 #define I_ARR "arr"
 #define I_GOT "got"
@@ -238,7 +243,12 @@ int assemble(char *file, int clean) {
 		} else if (!strcmp(tokens[0].text, "inc")) {
 			fileOpen(tokens[1].text);
 			continue;
-		}
+		} else if (!strcmp(tokens[0].text, P_DEFINE)) {
+			strcpy(memory.d[memory.length].name, tokens[1].text);
+			memory.d[memory.length].location = tokens[2].value;
+			memory.d[memory.length].type = DEFINE;
+			memory.length++;
+		} 
 
 		line++;
 	}
@@ -246,12 +256,34 @@ int assemble(char *file, int clean) {
 	// Close and reopen to pointer
 	readerPoint = 0;
 	readerStack[readerPoint] = fopen(file, "r");
+
+	// Whether skipping lines or not
+	int skipping = 0;
 	
 	// Lex regular instructions
 	line = 0;
 	while (fileNext()) {
 		int length = lex(tokens, buffer);
 		if (length == 0) {
+			continue;
+		}
+
+		// Very basic preprocessor
+		if (!strcmp(tokens[0].text, P_IFDEF)) {
+			int tryDef = locateObject(tokens[1].text, DEFINE);
+			if (tryDef != -1) {
+				skipping = 1;
+			}
+		} else if (!strcmp(tokens[0].text, P_IFDEF)) {
+			int tryDef = locateObject(tokens[1].text, DEFINE);
+			if (tryDef == -1) {
+				skipping = 1;
+			}
+		} else if (!strcmp(tokens[0].text, P_END)) {
+			skipping = 0;
+		}
+
+		if (skipping) {
 			continue;
 		}
 
@@ -290,30 +322,16 @@ int assemble(char *file, int clean) {
 			}
 		}
 
-		// Since every instruction starts with TEXT/LABEL,
-		// we can assume an error if it is not.
-		if (tokens[0].type != TEXT && tokens[0].type != LABEL) {
-			printf("%d", tokens[0].type);
-			printError("Expected TEXT or LABEL for first token");
-			goto kill;
-		}
-
 		// If label, it is already added.
 		if (tokens[0].type == LABEL) {
 			got(memory.used);
 			out("|");
-
 			line++;
 			continue;
 		}
 
 		// Now, assemble actual instructions
-		if (!strcmp(tokens[0].text, I_DEF)) {
-			strcpy(memory.d[memory.length].name, tokens[1].text);
-			memory.d[memory.length].location = tokens[2].value;
-			memory.d[memory.length].type = DEFINE;
-			memory.length++;
-		} else if (!strcmp(tokens[0].text, I_VAR)) {
+		if (!strcmp(tokens[0].text, I_VAR)) {
 			// Find a 
 			int location = memory.length;
 			for (int i = 0; i < memory.length; i++) {

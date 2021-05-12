@@ -46,8 +46,14 @@ int lex(struct Token *tokens, char *string) {
 		tokens[token].type = 0;
 		tokens[token].value = 0;
 		
-		if (isAlpha(string[c])) {
-			tokens[token].type = TEXT;
+		if (isAlpha(string[c]) || string[c] == '#') {
+			if (string[c] == '#') {
+				tokens[token].type = PREPROC;
+				c++;
+			} else {
+				tokens[token].type = TEXT;
+			}
+			
 			while (isAlpha(string[c])) {
 				tokens[token].text[tokens[token].length] = string[c];
 				tokens[token].length++;
