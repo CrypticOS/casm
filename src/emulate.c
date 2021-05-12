@@ -8,6 +8,8 @@
 	#include "gfx/gfx.h"
 #endif
 
+int x = 0;
+
 // NOTE: unused parameter expected if
 // compiled with windowed mode
 int run(char *file, char *keys) {
@@ -36,9 +38,9 @@ int run(char *file, char *keys) {
 				putchar((char)c);
 				c = fgetc(reader);
 			}
-
+			
 			fclose(reader);
-			return 0;
+			return 1;
 		}
 
 		*index = (char)c;
@@ -54,12 +56,9 @@ int run(char *file, char *keys) {
 		gfx_setColor(&window, 255, 0, 0);
 	#endif
 
-	unsigned short *memtop = malloc(sizeof(unsigned short) * MAX_TOP);
-	if (memtop == NULL) {puts("Alloc err"); return 1;}
-	unsigned short *membottom = malloc(sizeof(unsigned short) * MAX_BOTTOM);
-	if (membottom == NULL) {free(memtop); puts("Alloc err"); return 1;}
-	int *labels = malloc(sizeof(int) * MAX_LABELS);
-	if (labels == NULL) {free(memtop); free(membottom); puts("Alloc err"); return 1;}
+	unsigned short *memtop = calloc(MAX_TOP, sizeof(unsigned short));
+	unsigned short *membottom = calloc(MAX_BOTTOM, sizeof(unsigned short));
+	int *labels = calloc(MAX_LABELS, sizeof(int));
 
 	unsigned short *topp = memtop;
 	unsigned short *bottomp = membottom;
@@ -172,11 +171,21 @@ int run(char *file, char *keys) {
 
 		// Debug char
 		case '#':
+			x++;
+			if (x != 1) {break;}
 			puts("\nHalting program.");
 			puts("Dumping 100 memory cells from bottom...");
 			for (int i = 0; i < 100; i++) {
-				printf("%d ", membottom[i]);
+				printf("%c", membottom[i]);
 			}
+
+			printf("\n----\n");
+
+			for (int i = 0; i < 100; i++) {
+				printf("%d: %d %c\n", i, membottom[i], membottom[i]);
+			}
+
+			printf("\n----");
 
 			goto endAll;
 		}

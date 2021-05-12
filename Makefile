@@ -1,26 +1,16 @@
 INCLUDE ?= $(shell echo ~/Documents/crypticos)/
-FILE := emulate.c \
-		lex.c \
-		assemble.c \
-		main.c
 
-CC := gcc
+CC := tcc
 CFLAGS := -Wall
 
-default: all
+all:
+	@$(CC) src/*.c $(CFLAGS) -o casm
 
 help:
 	@echo "make INCLUDE=~/Documents/crypticos"
 
-all:
-	@cd src; $(CC) $(CFLAGS) \
-		$(FILE) \
-		-o ../casm
-
-allGfx:
-	@cd src; $(CC) $(CFLAGS) \
-		$(FILE) \
-		-o ../casm -lX11 -D EMULATOR_WINDOW
+window:
+	@$(CC) src/*.c $(CFLAGS) -o casm -lX11 -D EMULATOR_WINDOW
 
 micro:
 	cp casm.yaml ~/.config/micro/syntax

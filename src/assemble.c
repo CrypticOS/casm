@@ -49,7 +49,7 @@ void printError(char error[]) {
 		putchar('\n');
 	}
 	
-	printf("~ERR on line %d: %s~", line + 1, error);
+	fprintf(stderr, "~ERR on line %d: %s~\n", line + 1, error);
 }
 
 // Free entirety of file reader stack
