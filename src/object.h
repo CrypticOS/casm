@@ -15,7 +15,7 @@ enum Types {
 };
 
 struct Token {
-	char text[100];
+	char text[128];
 	int value;
 	int length;
 	int type;

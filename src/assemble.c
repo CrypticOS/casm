@@ -11,6 +11,9 @@
 #define P_IFDEF "ifdef"
 #define P_IFNDEF "ifndef"
 #define P_END "end"
+#define P_EXIT "exit"
+#define P_ERROR "error"
+#define P_UNDEF "undef"
 
 // Instruction table
 #define I_VAR "var"
@@ -33,18 +36,17 @@ char buffer[MAX_LINE];
 FILE *readerStack[3];
 int readerPoint = 0;
 
+// Main assembler
 struct Memory memory;
-
+struct Token tokens[MAX_TOK];
+int skippingLine = 0;
 char *casmLocationS = CASM_LOCATION;
 int line = 0;
 
 // Main instruction out function
 // (send to stdout for now)
 void out(char *string) {
-	while (*string != '\0') {
-		putchar(*string);
-		string++;
-	}
+	printf("%s", string);
 }
 
 void printError(char error[]) {
@@ -191,6 +193,39 @@ void putTok(struct Token *token, int reset) {
 	}
 }
 
+int preproc() {
+	if (tokens[0].type != PREPROC) {
+		return skippingLine;
+	}
+	
+	// Very basic preprocessor
+	if (!strcmp(tokens[0].text, P_IFDEF)) {
+		int tryDef = locateObject(tokens[1].text, DEFINE);
+		if (tryDef == -1) {
+			skippingLine = 1;
+		}
+	} else if (!strcmp(tokens[0].text, P_IFNDEF)) {
+		int tryDef = locateObject(tokens[1].text, DEFINE);
+		if (tryDef != -1) {
+			skippingLine = 1;
+		}
+	} else if (!strcmp(tokens[0].text, P_END)) {
+		skippingLine = 0;
+	} else if (!strcmp(tokens[0].text, P_DEFINE)) {
+		strcpy(memory.d[memory.length].name, tokens[1].text);
+		memory.d[memory.length].location = tokens[2].value;
+		memory.d[memory.length].type = DEFINE;
+		memory.length++;
+	} else if (!strcmp(tokens[0].text, P_UNDEF)) {
+		int tryDef = locateObject(tokens[1].text, DEFINE);
+		if (tryDef != -1) {
+			memory.d[tryDef].type = 0;
+		}
+	}
+
+	return skippingLine;
+}
+
 // Return 0/1 for good/bad assemble
 int assemble(char *file, int clean) {
 	memory.length = 0;
@@ -215,19 +250,25 @@ int assemble(char *file, int clean) {
 	memory.d[0].type = VAR;
 	memory.length++;
 
-	for (size_t i = 1; i < MAX_MEMOBJ; i++) {
+	for (int i = 1; i < MAX_MEMOBJ; i++) {
 		memory.d[i].type = EMPTY;
 	}
 	
-	// Lex through the labels/runs first.
-	struct Token tokens[MAX_TOK];
+	// Pre-assemble time lex through
+	// the labels/runs first.
 	int labelsFound = 0;
 	while (fileNext()) {
 		int length = lex(tokens, buffer);
 		if (length == 0) {
 			continue;
 		}
-		
+
+		// Preprocessor must be run here
+		// to ignore labels/includes
+		if (preproc()) {
+			continue;
+		}
+
 		if (tokens[0].type == LABEL) {
 			strcpy(memory.d[memory.length].name, tokens[0].text);
 			memory.d[memory.length].location = labelsFound;
@@ -243,22 +284,14 @@ int assemble(char *file, int clean) {
 		} else if (!strcmp(tokens[0].text, "inc")) {
 			fileOpen(tokens[1].text);
 			continue;
-		} else if (!strcmp(tokens[0].text, P_DEFINE)) {
-			strcpy(memory.d[memory.length].name, tokens[1].text);
-			memory.d[memory.length].location = tokens[2].value;
-			memory.d[memory.length].type = DEFINE;
-			memory.length++;
-		} 
+		}
 
 		line++;
 	}
 
 	// Close and reopen to pointer
 	readerPoint = 0;
-	readerStack[readerPoint] = fopen(file, "r");
-
-	// Whether skipping lines or not
-	int skipping = 0;
+	readerStack[readerPoint] = fopen(file, "r");	
 	
 	// Lex regular instructions
 	line = 0;
@@ -268,23 +301,20 @@ int assemble(char *file, int clean) {
 			continue;
 		}
 
-		// Very basic preprocessor
-		if (!strcmp(tokens[0].text, P_IFDEF)) {
-			int tryDef = locateObject(tokens[1].text, DEFINE);
-			if (tryDef != -1) {
-				skipping = 1;
-			}
-		} else if (!strcmp(tokens[0].text, P_IFDEF)) {
-			int tryDef = locateObject(tokens[1].text, DEFINE);
-			if (tryDef == -1) {
-				skipping = 1;
-			}
-		} else if (!strcmp(tokens[0].text, P_END)) {
-			skipping = 0;
+		if (preproc()) {
+			continue;
 		}
 
-		if (skipping) {
-			continue;
+		// Assemble time extra preprocessor features
+		if (tokens[0].type == PREPROC) {
+			if (!strcmp(tokens[0].text, P_ERROR)) {
+				printError(tokens[1].text);
+				killAll();
+				return 0;
+			} else if (!strcmp(tokens[0].text, P_EXIT)) {
+				killAll();
+				return 0;
+			}
 		}
 
 		// Set default variable WKSP before
@@ -407,7 +437,7 @@ int assemble(char *file, int clean) {
 				got(memory.used);
 
 				// The string printing algorithm is enhanced and optimized.
-				for (size_t i = 0; tokens[1].text[i] != '\0'; i++) {
+				for (int i = 0; tokens[1].text[i] != '\0'; i++) {
 					if (i != 0) {
 						if (tokens[1].text[i - 1] < tokens[1].text[i]) {
 							putInt(tokens[1].text[i] - tokens[1].text[i - 1]);

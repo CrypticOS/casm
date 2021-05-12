@@ -13,7 +13,7 @@ window:
 	@$(CC) src/*.c $(CFLAGS) -o casm -lX11 -D EMULATOR_WINDOW
 
 micro:
-	cp casm.yaml ~/.config/micro/syntax
+	cat casm.yaml > ~/.config/micro/syntax/casm.yaml
 
 env:
 	echo "export PATH=\$PATH:$PWD" >> ~/.bashrc

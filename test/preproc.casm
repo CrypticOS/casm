@@ -1,0 +1,13 @@
+; Preproc test
+#define FOO 0
+
+#ifdef FOO
+	inl "Hello!"
+#end
+
+#undef FOO
+
+inl "Hey!"
+
+#exit
+inl "Hello2"
