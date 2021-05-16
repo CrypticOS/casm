@@ -172,17 +172,11 @@ int run(char *file, char *keys) {
 		case '#':
 			puts("\nHalting program.");
 			puts("Dumping 100 memory cells from bottom...");
-			for (int i = 0; i < 100; i++) {
-				printf("%c", membottom[i]);
+			for (int i = 0; i < 200; i++) {
+				printf("%d:\t%d\t%c\n", i, membottom[i], membottom[i]);
 			}
 
-			printf("\n----\n");
-
-			for (int i = 0; i < 100; i++) {
-				printf("%d: %d %c\n", i, membottom[i], membottom[i]);
-			}
-
-			printf("\n----");
+			printf("Currently at memory position: %d\n", (int)(bottomp - membottom));
 
 			goto endAll;
 		}

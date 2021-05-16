@@ -354,7 +354,10 @@ int assemble(char *file, int clean) {
 
 		// If label, it is already added.
 		if (tokens[0].type == LABEL) {
-			got(memory.used);
+			if (tokens[0].text[0] != '_') {
+				got(memory.used);
+			}
+			
 			out("|");
 			line++;
 			continue;
@@ -559,11 +562,6 @@ int assemble(char *file, int clean) {
 			continue;
 		} else if (!strcmp(tokens[0].text, I_FRE)) {
 			int location = locateObject(tokens[1].text, VAR);
-			if (memory.d[location].type != VAR) {
-				printError("Can only free variables");
-				goto kill;
-			}
-			
 			memory.d[location].type = EMPTY;
 			memory.used--;
 		}
