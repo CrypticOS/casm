@@ -91,6 +91,25 @@ int lex(struct Token *tokens, char *string) {
 			tokens[token].type = STRING;
 			c++; // Skip "
 			while (string[c] != '"') {
+				if (string[c] == '\\') {
+					c++;
+
+					switch (string[c]) {
+					case 'n':
+						string[c] = '\t';
+						break;
+					case 't':
+						string[c] = '\t';
+						break;
+					case '0':
+						string[c] = '\0';
+						break;
+					case '"':
+						string[c] = '"';
+						break;
+					}
+				}
+				
 				tokens[token].text[tokens[token].length] = string[c];
 				tokens[token].length++;
 				c++;

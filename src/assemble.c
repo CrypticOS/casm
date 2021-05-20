@@ -246,16 +246,16 @@ int assemble(char *file, int clean) {
 
 	// Default variable WKSP. Takes no space, only
 	// set to workspace location.
-	strcpy(memory.d[0].name, "WKSP");
-	memory.d[0].type = VAR;
+	strcpy(memory.d[memory.length].name, "WKSP");
+	memory.d[memory.length].type = VAR;
 	memory.length++;
 
 	for (int i = 1; i < MAX_MEMOBJ; i++) {
 		memory.d[i].type = EMPTY;
 	}
 	
-	// Pre-assemble time lex through
-	// the labels/runs first.
+	// Pre-lex time - lex through
+	// the labels,runs,incs first.
 	int labelsFound = 0;
 	while (fileNext()) {
 		int length = lex(tokens, buffer);
@@ -287,6 +287,13 @@ int assemble(char *file, int clean) {
 		}
 
 		line++;
+	}
+
+	// Undefine everything after Pre-lex
+	for (int i = 0; i < memory.length; i++) {
+		if (memory.d[i].type == DEFINE) {
+			memory.d[i].type = 0;
+		}
 	}
 
 	// Close and reopen to pointer
