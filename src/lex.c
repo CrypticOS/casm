@@ -96,7 +96,7 @@ int lex(struct Token *tokens, char *string) {
 
 					switch (string[c]) {
 					case 'n':
-						string[c] = '\t';
+						string[c] = '\n';
 						break;
 					case 't':
 						string[c] = '\t';

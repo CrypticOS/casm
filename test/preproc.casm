@@ -1,13 +1,15 @@
+#system "echo This is a shell command"
+
 ; Preproc test
 #define FOO 0
 
 #ifdef FOO
-	inl "Hello!"
+	inl "Hello!\n"
 #end
 
 #undef FOO
 
-inl "Hey!"
+inl "Hey!\n"
 
 #exit
-inl "Hello2"
+inl "Hello2\n"

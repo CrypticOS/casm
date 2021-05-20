@@ -14,6 +14,7 @@
 #define P_EXIT "exit"
 #define P_ERROR "error"
 #define P_UNDEF "undef"
+#define P_SYSTEM "system"
 
 // Instruction table
 #define I_VAR "var"
@@ -267,6 +268,12 @@ int assemble(char *file, int clean) {
 		// to ignore labels/includes
 		if (preproc()) {
 			continue;
+		}
+
+		// System shell calls should not be called
+		// on pre lex
+		if (!strcmp(tokens[0].text, P_SYSTEM)) {
+			system(tokens[1].text);
 		}
 
 		if (tokens[0].type == LABEL) {
