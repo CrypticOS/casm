@@ -1,7 +1,7 @@
 INCLUDE ?= $(shell echo ~/Documents/crypticos)/
 
 CC := tcc
-CFLAGS := -Wall
+CFLAGS := -Wall -DCASM_LOCATION='"$(INCLUDE)"'
 
 all:
 	@$(CC) src/*.c $(CFLAGS) -o casm
