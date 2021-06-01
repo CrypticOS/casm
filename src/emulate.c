@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 200
+
 #include "data.h"
 
 #ifdef EMULATOR_WINDOW
@@ -49,7 +52,7 @@ int run(char *file, char *keys) {
 	fclose(reader);
 
 	#ifdef EMULATOR_WINDOW
-		struct gfx_window window = gfx_open(640, 480, "CrypticOS Emulator");
+		struct gfx_window window = gfx_open(SCREEN_WIDTH, SCREEN_HEIGHT, "CrypticOS Emulator");
 		struct gfx_interaction ia;
 		gfx_setColor(&window, 255, 0, 0);
 	#endif
@@ -121,11 +124,13 @@ int run(char *file, char *keys) {
 			#ifdef EMULATOR_WINDOW
 				// Manage standard OUT instructions, for graphics.
 				switch (*topp) {
-				case 0: // WRITE_PIXEL
-					gfx_pixel(&window, *(topp + 1), *(topp + 2));
+				case 50: // SETMODE
+					// We don't have to do anything since
+					// windowed mode is preset and precompiled
 					break;
-				case 1: // SET_COLOR
-					gfx_setColor(&window, *(topp + 1), *(topp + 2), *(topp + 3));
+				case 51: // SETPIXEL
+					gfx_setColor(&window, *(topp + 2), *(topp + 2), *(topp + 2));
+					gfx_pixel(&window, *(topp + 1) % 320, *(topp + 1) / 320);
 					break;
 				}
 			#else
